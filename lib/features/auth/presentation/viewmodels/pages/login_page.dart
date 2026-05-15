@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "../login_viewmodel.dart";
 import "home_page.dart";
+import "register_screen.dart"; 
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -172,8 +173,7 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: colorPrincipal,
                         foregroundColor: Colors.white,
                         elevation: 4,
-                        shadowColor:
-                            colorPrincipal.withOpacity(0.25),
+                        shadowColor: colorPrincipal.withOpacity(0.25),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -206,6 +206,29 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
+                  
+                  // --- AQUÍ AGREGAMOS EL BOTÓN DE REGISTRO ---
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "¿Nuevo trabajador? Registrar aquí",
+                      style: TextStyle(
+                        color: colorPrincipal,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  
+                  
                 ],
               ),
             ),
