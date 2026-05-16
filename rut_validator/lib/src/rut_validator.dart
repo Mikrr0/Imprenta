@@ -15,6 +15,20 @@ class RutValidator {
     return _calculateCheckDigit(numbers) == checkDigit;
   }
 
+  /// Valida un RUT para formularios (retorna null si es válido, String con error si no)
+  /// Diseñado para ser usado con TextFormField validator
+  static String? validarParaFormulario(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'El RUT es obligatorio';
+    }
+    
+    if (!validate(value)) {
+      return 'El RUT ingresado no es válido';
+    }
+    
+    return null;
+  }
+
   /// Calcula el dígito verificador para un RUT
   static String computeDv(String rutNumbers) {
     return _calculateCheckDigit(rutNumbers);
