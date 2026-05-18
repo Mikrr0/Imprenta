@@ -1,3 +1,25 @@
+enum RutValidationError {
+  empty,
+  invalidFormat,
+  invalidCheckDigit,
+  invalidLength,
+  nonNumericBody,
+}
+
+class RutValidationResult {
+  final bool isValid;
+  final RutValidationError? error;
+  final String? formattedRut;
+  final String? errorMessage;
+
+  RutValidationResult({
+    required this.isValid,
+    this.error,
+    this.formattedRut,
+    this.errorMessage,
+  });
+}
+
 class RutValidator {
   /// Valida un RUT chileno
   /// Acepta formatos: "12345678-9" o "123456789"
@@ -15,20 +37,6 @@ class RutValidator {
     return _calculateCheckDigit(numbers) == checkDigit;
   }
 
-  /// Valida un RUT para formularios (retorna null si es válido, String con error si no)
-  /// Diseñado para ser usado con TextFormField validator
-  static String? validarParaFormulario(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'El RUT es obligatorio';
-    }
-    
-    if (!validate(value)) {
-      return 'El RUT ingresado no es válido';
-    }
-    
-    return null;
-  }
-
   /// Calcula el dígito verificador para un RUT
   static String computeDv(String rutNumbers) {
     return _calculateCheckDigit(rutNumbers);
@@ -40,7 +48,7 @@ class RutValidator {
     if (clean.length < 2) return rut;
 
     final numbers = clean.substring(0, clean.length - 1);
-    final checkDigit = clean[clean.length - 1];
+    final checkDigit = clean[clean.length - 1].toUpperCase();
 
     // Agrupa los números de 3 en 3 desde la derecha
     final reversed = numbers.split('').reversed.toList();
@@ -53,6 +61,59 @@ class RutValidator {
 
     return '${groups.reversed.join('.')}-$checkDigit';
   }
+
+  /// Valida un RUT y retorna resultado detallado con error específico
+  static RutValidationResult validateDetailed(String? value) {
+    if (value == null || value.isEmpty) {
+      return RutValidationResult(
+        isValid: false,
+        error: RutValidationError.empty,
+        errorMessage: 'El RUT no puede estar vacío',
+      );
+    }
+
+    final clean = _removeFormat(value);
+
+    if (clean.length < 8 || clean.length > 9) {
+      return RutValidationResult(
+        isValid: false,
+        error: RutValidationError.invalidLength,
+        errorMessage: 'El RUT debe tener entre 8 y 9 caracteres',
+      );
+    }
+
+    final numbers = clean.substring(0, clean.length - 1);
+    final checkDigit = clean[clean.length - 1].toUpperCase();
+
+    if (int.tryParse(numbers) == null) {
+      return RutValidationResult(
+        isValid: false,
+        error: RutValidationError.nonNumericBody,
+        errorMessage: 'El RUT solo puede contener números y K',
+      );
+    }
+
+    final expectedCheckDigit = _calculateCheckDigit(numbers);
+    if (expectedCheckDigit != checkDigit) {
+      return RutValidationResult(
+        isValid: false,
+        error: RutValidationError.invalidCheckDigit,
+        errorMessage: 'Rut Inválido',
+      );
+    }
+
+    return RutValidationResult(
+      isValid: true,
+      formattedRut: format(value),
+    );
+  }
+
+  /// Validator compatible con TextFormField
+  /// Retorna null si es válido, o mensaje de error si no
+  static String? formFieldValidator(String? value) => 
+    validateDetailed(value).isValid 
+      ? null 
+      : validateDetailed(value).errorMessage;
 
   /// Elimina puntos, guiones y espacios del RUT
   static String _removeFormat(String rut) {

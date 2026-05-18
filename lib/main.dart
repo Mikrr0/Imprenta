@@ -1,19 +1,38 @@
-import 'package:flutter/material.dart';
-import 'core/theme/app_theme.dart';
-import 'features/crear_perfil/screens/crear_perfil_page.dart';
+import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+import "core/injection.dart";
+import "core/theme/app_theme.dart";
+import "core/theme/theme_provider.dart";
+import "features/auth/presentation/viewmodels/pages/login_page.dart";
+import "features/auth/presentation/viewmodels/personal_viewmodel.dart";
 
-void main() => runApp(const MyApp());
+void main() {
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Gestión de Imprenta',
-      theme: AppTheme.lightTheme,
-      home: const CrearPerfilPage(),
-      debugShowCheckedModeBanner: false,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppDependencies.buildLoginViewModel()),
+        ChangeNotifierProvider(create: (_) => PersonalViewModel()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: "Imprenta App",
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.modoActual,
+            home: const LoginPage(),
+          );
+        },
+      ),
     );
   }
 }
