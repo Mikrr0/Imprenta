@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:provider/provider.dart";
+import "package:rut_validator/rut_validator.dart";
 import "../personal_viewmodel.dart";
 
 class ProfileFormPage extends StatefulWidget {
@@ -34,7 +36,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     if (llaveDelFormulario.currentState!.validate()) {
       context.read<PersonalViewModel>().registrarNuevoTrabajador(
         controladorNombreCompleto.text,
-        controladorRutTrabajador.text,
+        RutValidator.format(controladorRutTrabajador.text),
         controladorCorreoLaboral.text,
         valorCargoSeleccionado!,
         valorRolSeleccionado!,
@@ -94,13 +96,30 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
               TextFormField(
                 controller: controladorRutTrabajador,
                 style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9\-\.kK]')),
+                ],
                 decoration: InputDecoration(
                   labelText: "RUT",
+                  hintText: "12.345.678-9",
                   filled: true,
                   fillColor: temaActual.colorScheme.surface,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: (valorIngresado) => valorIngresado == null || valorIngresado.isEmpty ? "Debe ingresar el RUT" : null,
+                validator: RutValidator.formFieldValidator,
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    final formatted = RutValidator.format(value);
+                    if (formatted != value) {
+                      controladorRutTrabajador.value = TextEditingValue(
+                        text: formatted,
+                        selection: TextSelection.fromPosition(
+                          TextPosition(offset: formatted.length),
+                        ),
+                      );
+                    }
+                  }
+                },
               ),
               const SizedBox(height: 16),
 
