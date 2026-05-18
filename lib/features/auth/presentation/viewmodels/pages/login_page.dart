@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:provider/provider.dart";
-import "package:rut_validator/rut_validator.dart";
+import "../../../../../core/validators/campo_validators.dart";
 import "../login_viewmodel.dart";
 import "home_page.dart";
 
@@ -176,10 +176,10 @@ class _LoginPageState extends State<LoginPage> {
                       hint: "12.345.678-9",
                       icon: Icons.badge_outlined,
                     ),
-                    validator: RutValidator.formFieldValidator,
+                    validator: CampoValidators.validarRut,
                     onChanged: (value) {
                       if (value.isNotEmpty) {
-                        final formatted = RutValidator.format(value);
+                        final formatted = CampoValidators.formatearRut(value);
                         if (formatted != value) {
                           controladorRut.value = TextEditingValue(
                             text: formatted,
@@ -189,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                           );
                         }
                         
-                        final validationError = RutValidator.formFieldValidator(value);
+                        final validationError = CampoValidators.validarRut(value);
                         setState(() {
                           _errorRutInvalido = validationError;
                         });
@@ -216,7 +216,7 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: viewModel.estaCargandoDatos || !RutValidator.validate(controladorRut.text)
+                      onPressed: viewModel.estaCargandoDatos || !CampoValidators.esRutValido(controladorRut.text)
                           ? null
                           : () async {
                               if (_formKey.currentState!.validate()) {
@@ -224,7 +224,7 @@ class _LoginPageState extends State<LoginPage> {
                                 
                                 final accesoConcedido = await viewModel
                                     .procesarInicioDeSesion(
-                                  RutValidator.format(controladorRut.text),
+                                  CampoValidators.formatearRut(controladorRut.text),
                                   controladorContrasena.text,
                                 );
 

@@ -33,12 +33,17 @@ class CampoValidators {
 
   /// [RF13] Valida RUT chileno usando el componente centralizado de validación
   static String? validarRut(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'El RUT es obligatorio';
-    }
-    
-    // Invoca al validador centralizado (Módulo 11)
-    return RutValidator.validarParaFormulario(value);
+    return RutValidator.formFieldValidator(value);
+  }
+
+  /// [RF13] Formatea RUT chileno al formato estándar XX.XXX.XXX-X
+  static String formatearRut(String value) {
+    return RutValidator.format(value);
+  }
+
+  /// [RF13] Valida si un RUT es correcto (retorna bool)
+  static bool esRutValido(String value) {
+    return RutValidator.validate(value);
   }
 
   /// [RF13] Valida correo electrónico: obligatorio, con @ y punto

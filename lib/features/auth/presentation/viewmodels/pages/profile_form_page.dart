@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:provider/provider.dart";
-import "package:rut_validator/rut_validator.dart";
+import "../../../../../core/validators/campo_validators.dart";
 import "../personal_viewmodel.dart";
 
 class ProfileFormPage extends StatefulWidget {
@@ -36,7 +36,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     if (llaveDelFormulario.currentState!.validate()) {
       context.read<PersonalViewModel>().registrarNuevoTrabajador(
         controladorNombreCompleto.text,
-        RutValidator.format(controladorRutTrabajador.text),
+        CampoValidators.formatearRut(controladorRutTrabajador.text),
         controladorCorreoLaboral.text,
         valorCargoSeleccionado!,
         valorRolSeleccionado!,
@@ -106,10 +106,10 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   fillColor: temaActual.colorScheme.surface,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: RutValidator.formFieldValidator,
+                validator: CampoValidators.validarRut,
                 onChanged: (value) {
                   if (value.isNotEmpty) {
-                    final formatted = RutValidator.format(value);
+                    final formatted = CampoValidators.formatearRut(value);
                     if (formatted != value) {
                       controladorRutTrabajador.value = TextEditingValue(
                         text: formatted,
