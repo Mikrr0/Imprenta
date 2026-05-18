@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:provider/provider.dart";
+import "../../../../../core/validators/campo_validators.dart";
 import "../login_viewmodel.dart";
 import "home_page.dart";
 import "register_screen.dart"; 
@@ -12,11 +14,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController controladorRut = TextEditingController();
   final TextEditingController controladorContrasena = TextEditingController();
 
   final Color colorPrincipal = const Color(0xFF4682B4);
   final Color colorFondo = const Color(0xFFF8FAFD);
+
+  String? _errorRutInvalido;
 
   @override
   void dispose() {
@@ -49,9 +54,11 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -126,14 +133,73 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 24),
                   ],
+                  if (_errorRutInvalido != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.red.shade200,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _errorRutInvalido!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   _buildInputLabel("RUT"),
                   const SizedBox(height: 8),
-                  TextField(
+                  TextFormField(
                     controller: controladorRut,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9\-\.kK]')),
+                    ],
                     decoration: _buildInputDecoration(
                       hint: "12.345.678-9",
                       icon: Icons.badge_outlined,
                     ),
+                    validator: CampoValidators.validarRut,
+                    onChanged: (value) {
+                      if (value.isNotEmpty) {
+                        final formatted = CampoValidators.formatearRut(value);
+                        if (formatted != value) {
+                          controladorRut.value = TextEditingValue(
+                            text: formatted,
+                            selection: TextSelection.fromPosition(
+                              TextPosition(offset: formatted.length),
+                            ),
+                          );
+                        }
+                        
+                        final validationError = CampoValidators.validarRut(value);
+                        setState(() {
+                          _errorRutInvalido = validationError;
+                        });
+                      } else {
+                        setState(() {
+                          _errorRutInvalido = null;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildInputLabel("Contraseña"),
@@ -151,22 +217,26 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: viewModel.estaCargandoDatos
+                      onPressed: viewModel.estaCargandoDatos || !CampoValidators.esRutValido(controladorRut.text)
                           ? null
                           : () async {
-                              final accesoConcedido = await viewModel
-                                  .procesarInicioDeSesion(
-                                controladorRut.text,
-                                controladorContrasena.text,
-                              );
-
-                              if (accesoConcedido && context.mounted) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const HomePage(),
-                                  ),
+                              if (_formKey.currentState!.validate()) {
+                                setState(() => _errorRutInvalido = null);
+                                
+                                final accesoConcedido = await viewModel
+                                    .procesarInicioDeSesion(
+                                  CampoValidators.formatearRut(controladorRut.text),
+                                  controladorContrasena.text,
                                 );
+
+                                if (accesoConcedido && context.mounted) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const HomePage(),
+                                    ),
+                                  );
+                                }
                               }
                             },
                       style: ElevatedButton.styleFrom(
@@ -230,6 +300,7 @@ class _LoginPageState extends State<LoginPage> {
                   
                   
                 ],
+                ),
               ),
             ),
           ),
