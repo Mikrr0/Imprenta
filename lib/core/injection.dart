@@ -6,9 +6,12 @@ import 'package:proyecto/features/auth/data/datasources/auth_remote_datasource.d
 class AppDependencies {
   static LoginViewModel buildLoginViewModel() {
     final remoteDataSource = AuthRemoteDataSourceImpl();
-    final authRepository = AuthRepositoryImpl(remoteDataSource);
-    final loginUseCase = LoginUseCase(authRepository);
     
+    // CORREGIDO: Le agregamos el "remoteDataSource:" antes de la variable
+    final authRepository = AuthRepositoryImpl(remoteDataSource: remoteDataSource);
+    
+    final loginUseCase = LoginUseCase(authRepository);
+
     return LoginViewModel(loginUseCase);
   }
 }

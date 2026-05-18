@@ -1,30 +1,41 @@
-import 'package:proyecto/features/auth/domain/entities/usuario.dart';
+import 'package:proyecto/core/models/perfil_trabajador.dart';
 import 'package:proyecto/features/auth/domain/repositories/auth_repository.dart';
 import 'package:proyecto/features/auth/data/datasources/auth_remote_datasource.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
 
-  AuthRepositoryImpl(this.remoteDataSource);
+  AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Usuario> login(String rut, String password) async {
+  Future<PerfilTrabajador> login(String rut, String password) async {
     return await remoteDataSource.login(rut, password);
   }
 
-   @override
-  Future<void> registrarUsuario(String rut, String password, String nombreCompleto) async {
-
-  return await remoteDataSource.registrarUsuario(rut, password, nombreCompleto);
-}
-
   @override
-  Future<void> logout() async {
-    return await remoteDataSource.logout();
+  Future<void> registrarUsuario({
+    required String rut, 
+    required String password, 
+    required String nombreCompleto,
+    required String rol,
+    required bool estado,
+  }) async {
+    return await remoteDataSource.registrarUsuario(
+      rut: rut,
+      password: password,
+      nombreCompleto: nombreCompleto,
+      rol: rol,
+      estado: estado,
+    );
   }
 
   @override
-  Stream<Usuario> obtenerUsuarioStream(String uid) {
+  Future<void> logout() async {
+    await remoteDataSource.logout();
+  }
+
+  @override
+  Stream<PerfilTrabajador> obtenerUsuarioStream(String uid) {
     return remoteDataSource.obtenerUsuarioStream(uid);
   }
 }
