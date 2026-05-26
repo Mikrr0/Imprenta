@@ -20,7 +20,7 @@ class LoginViewModel extends ChangeNotifier {
     mensajeDeErrorVisible = null;
     notifyListeners(); 
 
-    // Usamos la clase correcta de Benjamín. Si retorna un String, es porque hay error.
+    // Validaciones de formato iniciales
     final errorRut = CampoValidators.validarRut(rutIngresado.trim());
     if (errorRut != null) {
       estaCargandoDatos = false;
@@ -38,14 +38,15 @@ class LoginViewModel extends ChangeNotifier {
     } catch (e) {
       contadorIntentosFallidos++; 
       estaCargandoDatos = false;
-      mensajeDeErrorVisible = "Fallo Firebase: $e"; 
+
+      mensajeDeErrorVisible = "Contraseña o usuario incorrecto"; 
+      
       notifyListeners();
       return false;
     }
   }
 
-
- 
+  // --- REGISTRO DE TRABAJADOR ---
   Future<bool> registrarTrabajadorCompleto({
     required String nombre,
     required String rut,
@@ -53,13 +54,13 @@ class LoginViewModel extends ChangeNotifier {
     required String cargo,
     required String rol,
     required String sueldoTexto,
-    required String password, // <-- ¡AGREGAMOS ESTO AQUÍ!
+    required String password,
   }) async {
     estaRegistrando = true;
     mensajeDeErrorVisible = null;
     notifyListeners();
 
-    // 1. Validaciones centralizadas de Benja
+    // Validaciones centralizadas
     final errorNombre = CampoValidators.validarNombre(nombre.trim());
     if (errorNombre != null) {
       estaRegistrando = false;
@@ -93,13 +94,12 @@ class LoginViewModel extends ChangeNotifier {
     }
 
     try {
-      // 2. Mandamos a guardar a la base de datos usando la contraseña que viene de la pantalla
       await loginUseCase.registrarNuevoUsuario(
         rut: rut.trim(),
-        password: password, // <-- USAMOS LA CONTRASEÑA REAL AQUÍ
+        password: password, 
         nombre: nombre.trim(),
         rol: rol, 
-        estado: true, // Activo por defecto
+        estado: true, 
       );
       
       estaRegistrando = false;
@@ -112,4 +112,4 @@ class LoginViewModel extends ChangeNotifier {
       return false;
     }
   }
-  }
+}

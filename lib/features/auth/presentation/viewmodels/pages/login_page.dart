@@ -278,28 +278,20 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   
-                  // --- AQUÍ AGREGAMOS EL BOTÓN DE REGISTRO ---
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CrearPerfilPage(),
-                        ),
-                      );
+
                     },
                     child: Text(
-                      "¿Nuevo trabajador? Registrar aquí",
+                      "¿Olvidaste tu contraseña?",
                       style: TextStyle(
-                        color: colorPrincipal,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                      color: colorPrincipal,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                       ),
                     ),
-                  ),
-                  
-                  
+                  )
                 ],
                 ),
               ),
