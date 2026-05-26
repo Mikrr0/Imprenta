@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:rut_validator/rut_validator.dart';
 
 import '../../../core/constants/app_config.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/validators/campo_validators.dart';
 import '../../../core/models/perfil_trabajador.dart';
-
-// OJO CON ESTA RUTA: Asegúrate de que apunte a donde tienes tu login_viewmodel.dart
-import '../../auth/presentation/viewmodels/login_viewmodel.dart';
+import '../../../core/services/audit_service.dart';
+import '../../../core/services/logging_service.dart';
 
 /// [RF2] [RF13] Pantalla de creación de perfil de trabajador
 /// Permite al Administrador crear nuevos perfiles con validación centralizada
@@ -20,12 +18,17 @@ class CrearPerfilPage extends StatefulWidget {
 }
 
 class _CrearPerfilPageState extends State<CrearPerfilPage> {
+  /// Servicio de auditoría para registrar eventos
+  final AuditService _auditService = AuditService();
+
+  /// Servicio de logging para mostrar eventos en consola
+  final LoggingService _loggingService = LoggingService();
+
   /// Controladores para capturar datos del formulario
   late final TextEditingController _nombreController;
   late final TextEditingController _rutController;
   late final TextEditingController _correoController;
   late final TextEditingController _sueldoController;
-  late final TextEditingController _passwordController; // <-- Controlador de contraseña
 
   /// Variables de estado para dropdowns
   String? _cargoSeleccionado;
@@ -41,16 +44,15 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
     _rutController = TextEditingController();
     _correoController = TextEditingController();
     _sueldoController = TextEditingController();
-    _passwordController = TextEditingController(); // <-- Inicializado
   }
 
   @override
   void dispose() {
+    // Liberar recursos de los controladores
     _nombreController.dispose();
     _rutController.dispose();
     _correoController.dispose();
     _sueldoController.dispose();
-    _passwordController.dispose(); // <-- Liberado
     super.dispose();
   }
 
@@ -64,7 +66,8 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
   void _alCambiarCargo(String? nuevoCargo) {
     setState(() {
       _cargoSeleccionado = nuevoCargo;
-      
+
+      // Si el rol actual no es válido para el nuevo cargo, resetea
       if (_rolSeleccionado != null && nuevoCargo != null) {
         final rolesValidos = _obtenerRolesParaCargo();
         if (!rolesValidos.contains(_rolSeleccionado)) {
@@ -79,47 +82,33 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
     return CampoValidators.validarRol(value, _cargoSeleccionado);
   }
 
-  /// Guarda el perfil conectándose al ViewModel
-  void _guardarPerfil() async {
+  /// Guarda el perfil después de validar el formulario
+  void _guardarPerfil() {
     if (_formKey.currentState!.validate()) {
-      // 1. Llamamos al ViewModel a través del Provider
-      final vm = Provider.of<LoginViewModel>(context, listen: false);
+      // Formatea el RUT para almacenamiento visual
+      final rutFormateado = RutValidator.format(_rutController.text);
 
-      // 2. Ejecutamos la función de registro pasándole también la contraseña
-      final exito = await vm.registrarTrabajadorCompleto(
-        nombre: _nombreController.text,
-        rut: _rutController.text,
-        correo: _correoController.text,
+      // Crea modelo de perfil
+      final perfil = PerfilTrabajador(
+        nombreCompleto: _nombreController.text.trim(),
+        rut: _rutController.text.trim(),
+        correoElectronico: _correoController.text.trim(),
         cargo: _cargoSeleccionado!,
         rol: _rolSeleccionado!,
-        sueldoTexto: _sueldoController.text,
-        password: _passwordController.text, // <-- Pasamos la contraseña
+        sueldoBase: double.parse(_sueldoController.text),
       );
 
-      // Chequeo de seguridad de Flutter para evitar la línea azul
-      if (!mounted) return;
+      // Registra el intento en auditoría
+      _auditService.registrarIntentoCreacionPerfil(perfil);
 
-      // 3. Manejamos el resultado en la interfaz
-      if (exito) {
-        final rutFormateado = RutValidator.format(_rutController.text);
-        final perfil = PerfilTrabajador(
-          rut: _rutController.text.trim(),
-          nombreCompleto: _nombreController.text.trim(),
-          correoElectronico: _correoController.text.trim(),
-          cargo: _cargoSeleccionado!,
-          rol: _rolSeleccionado!,
-          sueldoBase: double.parse(_sueldoController.text),
-        );
+      // Registra éxito en auditoría
+      _auditService.registrarExitoCreacionPerfil(perfil);
 
-        _mostrarDialogoExito(perfil, rutFormateado);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(vm.mensajeDeErrorVisible ?? 'Error desconocido en Firebase'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Registra en logging (muestra en consola)
+      _loggingService.registrarCreacionExitosa(perfil);
+
+      // Despliega diálogo informativo con los datos consolidados
+      _mostrarDialogoExito(perfil, rutFormateado);
     }
   }
 
@@ -130,17 +119,10 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(
-              Icons.check_circle,
-              color: AppColors.success,
-              size: 24,
-            ),
+            Icon(Icons.check_circle, color: AppColors.success, size: 24),
             SizedBox(width: 12),
             Expanded(
-              child: Text(
-                'Perfil Creado',
-                style: TextStyle(fontSize: 18),
-              ),
+              child: Text('Perfil Creado', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),
@@ -162,7 +144,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppColors.success),
                 ),
@@ -172,7 +154,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Perfil registrado en el sistema exitosamente.',
+                        'Perfil registrado en el sistema',
                         style: TextStyle(
                           color: AppColors.success,
                           fontWeight: FontWeight.w500,
@@ -217,10 +199,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
           const SizedBox(height: 2),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.onSurface,
-            ),
+            style: const TextStyle(fontSize: 12, color: AppColors.onSurface),
           ),
           const Divider(height: 12),
         ],
@@ -235,20 +214,20 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
     _rutController.clear();
     _correoController.clear();
     _sueldoController.clear();
-    _passwordController.clear(); // <-- Limpiamos contraseña también
-    
+
     setState(() {
       _cargoSeleccionado = null;
       _rolSeleccionado = null;
     });
+
+    // Registra en auditoría
+    _auditService.registrarLimpiezaFormulario();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Crear Perfil de Trabajador'),
-      ),
+      appBar: AppBar(title: const Text('Crear Perfil de Trabajador')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -261,7 +240,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.info.withOpacity(0.1),
+                    color: AppColors.info.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.info),
                   ),
@@ -272,10 +251,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                       Expanded(
                         child: Text(
                           'Solo administradores pueden crear perfiles de trabajadores',
-                          style: TextStyle(
-                            color: AppColors.info,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: AppColors.info, fontSize: 12),
                         ),
                       ),
                     ],
@@ -283,6 +259,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                 ),
                 const SizedBox(height: 24),
 
+                // Campo: Nombre completo
                 TextFormField(
                   controller: _nombreController,
                   decoration: const InputDecoration(
@@ -294,6 +271,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                 ),
                 const SizedBox(height: 16),
 
+                // Campo: RUT Chileno [RF13]
                 TextFormField(
                   controller: _rutController,
                   decoration: const InputDecoration(
@@ -305,6 +283,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                 ),
                 const SizedBox(height: 16),
 
+                // Campo: Correo electrónico [RF13]
                 TextFormField(
                   controller: _correoController,
                   decoration: const InputDecoration(
@@ -316,53 +295,36 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // NUEVO CAMPO: Contraseña
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Contraseña de acceso',
-                    hintText: 'Mínimo 6 caracteres',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                  obscureText: true, // Esto oculta el texto con puntitos
-                  validator: (value) {
-                    if (value == null || value.length < 6) {
-                      return 'La contraseña debe tener al menos 6 caracteres';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
+                // Dropdown: Cargo [RF2]
                 DropdownButtonFormField<String>(
-                  value: _cargoSeleccionado,
+                  initialValue: _cargoSeleccionado,
                   decoration: const InputDecoration(
                     labelText: 'Cargo',
                     prefixIcon: Icon(Icons.work),
                   ),
                   items: AppConfig.todosCargos
-                      .map((cargo) => DropdownMenuItem(
-                            value: cargo,
-                            child: Text(cargo),
-                          ))
+                      .map(
+                        (cargo) =>
+                            DropdownMenuItem(value: cargo, child: Text(cargo)),
+                      )
                       .toList(),
                   onChanged: _alCambiarCargo,
                   validator: CampoValidators.validarCargo,
                 ),
                 const SizedBox(height: 16),
 
+                // Dropdown: Rol de Seguridad [RF13] - Solo muestra roles válidos para el cargo
                 DropdownButtonFormField<String>(
-                  value: _rolSeleccionado,
+                  initialValue: _rolSeleccionado,
                   decoration: const InputDecoration(
                     labelText: 'Rol de Seguridad',
                     prefixIcon: Icon(Icons.security),
-                    helperText: 'Roles disponibles para el cargo',
+                    helperText: 'Roles disponibles para el cargo seleccionado',
                   ),
                   items: _obtenerRolesParaCargo()
-                      .map((rol) => DropdownMenuItem(
-                            value: rol,
-                            child: Text(rol),
-                          ))
+                      .map(
+                        (rol) => DropdownMenuItem(value: rol, child: Text(rol)),
+                      )
                       .toList(),
                   onChanged: _cargoSeleccionado != null
                       ? (value) {
@@ -376,6 +338,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                 ),
                 const SizedBox(height: 16),
 
+                // Campo: Sueldo base [RF2]
                 TextFormField(
                   controller: _sueldoController,
                   decoration: const InputDecoration(
@@ -389,9 +352,10 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                 ),
                 const SizedBox(height: 32),
 
-                // Fila de botones
+                // Fila de botones [RNF4] Accesibilidad: 44x44px mínimo
                 Row(
                   children: [
+                    // Botón: Guardar perfil
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: _guardarPerfil,
@@ -400,6 +364,7 @@ class _CrearPerfilPageState extends State<CrearPerfilPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Botón: Limpiar
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _limpiarFormulario,

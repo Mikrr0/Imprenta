@@ -6,7 +6,6 @@ import "../../../../../core/validators/campo_validators.dart";
 import "../login_viewmodel.dart";
 import "home_page.dart";
 
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -49,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -63,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: colorPrincipal.withOpacity(0.12),
+                      color: colorPrincipal.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -105,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.08),
+                        color: Colors.red.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Colors.red.shade200,
@@ -138,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.08),
+                        color: Colors.red.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Colors.red.shade200,
@@ -244,7 +243,8 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: colorPrincipal,
                         foregroundColor: Colors.white,
                         elevation: 4,
-                        shadowColor: colorPrincipal.withOpacity(0.25),
+                        shadowColor:
+                            colorPrincipal.withValues(alpha: 0.25),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -277,8 +277,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  
-                  // --- AQUÍ AGREGAMOS EL BOTÓN DE REGISTRO ---
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
@@ -298,8 +296,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  
-                  
                 ],
                 ),
               ),
@@ -331,7 +327,7 @@ class _LoginPageState extends State<LoginPage> {
     final borderStyle = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
       borderSide: BorderSide(
-        color: colorPrincipal.withOpacity(0.15),
+        color: colorPrincipal.withValues(alpha: 0.15),
         width: 1.2,
       ),
     );
@@ -355,7 +351,7 @@ class _LoginPageState extends State<LoginPage> {
       enabledBorder: borderStyle,
       focusedBorder: borderStyle.copyWith(
         borderSide: BorderSide(
-          color: colorPrincipal.withOpacity(0.8),
+          color: colorPrincipal.withValues(alpha: 0.8),
           width: 1.8,
         ),
       ),

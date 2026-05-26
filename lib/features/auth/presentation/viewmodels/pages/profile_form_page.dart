@@ -14,15 +14,27 @@ class ProfileFormPage extends StatefulWidget {
 class _ProfileFormPageState extends State<ProfileFormPage> {
   final llaveDelFormulario = GlobalKey<FormState>();
 
-  final TextEditingController controladorNombreCompleto = TextEditingController();
-  final TextEditingController controladorRutTrabajador = TextEditingController();
-  final TextEditingController controladorCorreoLaboral = TextEditingController();
+  final TextEditingController controladorNombreCompleto =
+      TextEditingController();
+  final TextEditingController controladorRutTrabajador =
+      TextEditingController();
+  final TextEditingController controladorCorreoLaboral =
+      TextEditingController();
 
   String? valorCargoSeleccionado;
   String? valorRolSeleccionado;
 
-  final List<String> listadoDeCargosDisponibles = ["Impresor", "Diseñador", "Bodeguero", "Supervisor"];
-  final List<String> listadoDeRolesAdministrativos = ["Administrador", "Jefe", "Operario"];
+  final List<String> listadoDeCargosDisponibles = [
+    "Impresor",
+    "Diseñador",
+    "Bodeguero",
+    "Supervisor",
+  ];
+  final List<String> listadoDeRolesAdministrativos = [
+    "Administrador",
+    "Jefe",
+    "Operario",
+  ];
 
   @override
   void dispose() {
@@ -44,15 +56,21 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Perfil creado exitosamente", style: TextStyle(color: Colors.white)),
+          content: Text(
+            "Perfil creado exitosamente",
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.pop(context); 
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Por favor, complete todos los campos obligatorios", style: TextStyle(color: Colors.white)),
+          content: Text(
+            "Por favor, complete todos los campos obligatorios",
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -65,7 +83,10 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Crear Nuevo Perfil", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Crear Nuevo Perfil",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -76,7 +97,11 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
             children: [
               Text(
                 "Datos del Trabajador",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: temaActual.textTheme.bodyLarge?.color),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: temaActual.textTheme.bodyLarge?.color,
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -87,9 +112,14 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   labelText: "Nombre Completo",
                   filled: true,
                   fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                validator: (valorIngresado) => valorIngresado == null || valorIngresado.isEmpty ? "Debe ingresar el nombre" : null,
+                validator: (valorIngresado) =>
+                    valorIngresado == null || valorIngresado.isEmpty
+                    ? "Debe ingresar el nombre"
+                    : null,
               ),
               const SizedBox(height: 16),
 
@@ -104,7 +134,9 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   hintText: "12.345.678-9",
                   filled: true,
                   fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 validator: CampoValidators.validarRut,
                 onChanged: (value) {
@@ -131,9 +163,14 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   labelText: "Correo Electrónico",
                   filled: true,
                   fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                validator: (valorIngresado) => valorIngresado == null || valorIngresado.isEmpty ? "Debe ingresar el correo" : null,
+                validator: (valorIngresado) =>
+                    valorIngresado == null || valorIngresado.isEmpty
+                    ? "Debe ingresar el correo"
+                    : null,
               ),
               const SizedBox(height: 16),
 
@@ -142,14 +179,23 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   labelText: "Cargo",
                   filled: true,
                   fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 dropdownColor: temaActual.colorScheme.surface,
                 style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
-                value: valorCargoSeleccionado,
-                items: listadoDeCargosDisponibles.map((cargo) => DropdownMenuItem(value: cargo, child: Text(cargo))).toList(),
-                onChanged: (nuevoValor) => setState(() => valorCargoSeleccionado = nuevoValor),
-                validator: (valorSeleccionado) => valorSeleccionado == null ? "Seleccione un cargo" : null,
+                initialValue: valorCargoSeleccionado,
+                items: listadoDeCargosDisponibles
+                    .map(
+                      (cargo) =>
+                          DropdownMenuItem(value: cargo, child: Text(cargo)),
+                    )
+                    .toList(),
+                onChanged: (nuevoValor) =>
+                    setState(() => valorCargoSeleccionado = nuevoValor),
+                validator: (valorSeleccionado) =>
+                    valorSeleccionado == null ? "Seleccione un cargo" : null,
               ),
               const SizedBox(height: 16),
 
@@ -158,14 +204,22 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   labelText: "Rol en el Sistema",
                   filled: true,
                   fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 dropdownColor: temaActual.colorScheme.surface,
                 style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
-                value: valorRolSeleccionado,
-                items: listadoDeRolesAdministrativos.map((rol) => DropdownMenuItem(value: rol, child: Text(rol))).toList(),
-                onChanged: (nuevoValor) => setState(() => valorRolSeleccionado = nuevoValor),
-                validator: (valorSeleccionado) => valorSeleccionado == null ? "Seleccione un rol" : null,
+                initialValue: valorRolSeleccionado,
+                items: listadoDeRolesAdministrativos
+                    .map(
+                      (rol) => DropdownMenuItem(value: rol, child: Text(rol)),
+                    )
+                    .toList(),
+                onChanged: (nuevoValor) =>
+                    setState(() => valorRolSeleccionado = nuevoValor),
+                validator: (valorSeleccionado) =>
+                    valorSeleccionado == null ? "Seleccione un rol" : null,
               ),
               const SizedBox(height: 32),
 
@@ -177,9 +231,14 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: temaActual.colorScheme.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text("Guardar Perfil", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "Guardar Perfil",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],

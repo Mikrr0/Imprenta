@@ -1,3 +1,3 @@
-library rut_validator;
+library;
 
 export 'src/rut_validator.dart';

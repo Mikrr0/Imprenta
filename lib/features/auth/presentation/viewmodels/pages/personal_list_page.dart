@@ -21,11 +21,11 @@ class PersonalListPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.group_off_outlined, size: 80, color: temaActual.colorScheme.primary.withOpacity(0.5)),
+                  Icon(Icons.group_off_outlined, size: 80, color: temaActual.colorScheme.primary.withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   Text(
                     "No hay trabajadores registrados",
-                    style: TextStyle(fontSize: 18, color: temaActual.textTheme.bodyLarge?.color?.withOpacity(0.7)),
+                    style: TextStyle(fontSize: 18, color: temaActual.textTheme.bodyLarge?.color?.withValues(alpha: 0.7)),
                   ),
                 ],
               ),

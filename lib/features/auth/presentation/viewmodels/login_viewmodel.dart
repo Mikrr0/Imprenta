@@ -1,115 +1,41 @@
-import 'package:flutter/material.dart';
-import 'package:proyecto/features/auth/domain/usecases/login_usecase.dart';
-import 'package:proyecto/core/models/perfil_trabajador.dart';
-import 'package:proyecto/core/validators/campo_validators.dart'; 
+import "package:flutter/material.dart";
 
 class LoginViewModel extends ChangeNotifier {
-  final LoginUseCase loginUseCase;
-
-  LoginViewModel(this.loginUseCase);
-
   bool estaCargandoDatos = false;
-  bool estaRegistrando = false;
   String? mensajeDeErrorVisible;
   int contadorIntentosFallidos = 0;
-  PerfilTrabajador? usuarioActual;
 
-  // --- INICIO DE SESIÓN CONECTADO ---
   Future<bool> procesarInicioDeSesion(String rutIngresado, String contrasenaIngresada) async {
     estaCargandoDatos = true;
     mensajeDeErrorVisible = null;
     notifyListeners(); 
 
-    // Usamos la clase correcta de Benjamín. Si retorna un String, es porque hay error.
-    final errorRut = CampoValidators.validarRut(rutIngresado.trim());
-    if (errorRut != null) {
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (contadorIntentosFallidos >= 5) {
       estaCargandoDatos = false;
-      mensajeDeErrorVisible = errorRut; 
+      mensajeDeErrorVisible = "Cuenta bloqueada temporalmente por 15 minutos tras 5 intentos fallidos.";
       notifyListeners();
       return false;
     }
 
-    try {
-      usuarioActual = await loginUseCase.execute(rutIngresado.trim(), contrasenaIngresada);
-      estaCargandoDatos = false;
-      contadorIntentosFallidos = 0; 
-      notifyListeners(); 
-      return true; 
-    } catch (e) {
+    if (contrasenaIngresada != "pass123") {
       contadorIntentosFallidos++; 
-      estaCargandoDatos = false;
-      mensajeDeErrorVisible = "Fallo Firebase: $e"; 
-      notifyListeners();
-      return false;
-    }
-  }
-
-
- 
-  Future<bool> registrarTrabajadorCompleto({
-    required String nombre,
-    required String rut,
-    required String correo,
-    required String cargo,
-    required String rol,
-    required String sueldoTexto,
-    required String password, // <-- ¡AGREGAMOS ESTO AQUÍ!
-  }) async {
-    estaRegistrando = true;
-    mensajeDeErrorVisible = null;
-    notifyListeners();
-
-    // 1. Validaciones centralizadas de Benja
-    final errorNombre = CampoValidators.validarNombre(nombre.trim());
-    if (errorNombre != null) {
-      estaRegistrando = false;
-      mensajeDeErrorVisible = errorNombre;
-      notifyListeners();
-      return false;
-    }
-
-    final errorRut = CampoValidators.validarRut(rut.trim());
-    if (errorRut != null) {
-      estaRegistrando = false;
-      mensajeDeErrorVisible = errorRut;
-      notifyListeners();
-      return false;
-    }
-
-    final errorCorreo = CampoValidators.validarCorreo(correo.trim());
-    if (errorCorreo != null) {
-      estaRegistrando = false;
-      mensajeDeErrorVisible = errorCorreo;
-      notifyListeners();
-      return false;
-    }
-
-    final errorSueldo = CampoValidators.validarSueldo(sueldoTexto.trim());
-    if (errorSueldo != null) {
-      estaRegistrando = false;
-      mensajeDeErrorVisible = errorSueldo;
-      notifyListeners();
-      return false;
-    }
-
-    try {
-      // 2. Mandamos a guardar a la base de datos usando la contraseña que viene de la pantalla
-      await loginUseCase.registrarNuevoUsuario(
-        rut: rut.trim(),
-        password: password, // <-- USAMOS LA CONTRASEÑA REAL AQUÍ
-        nombre: nombre.trim(),
-        rol: rol, 
-        estado: true, // Activo por defecto
-      );
       
-      estaRegistrando = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      estaRegistrando = false;
-      mensajeDeErrorVisible = "Error en Firebase: $e";
+      if (contadorIntentosFallidos >= 5) {
+        mensajeDeErrorVisible = "Cuenta bloqueada temporalmente por 15 minutos tras 5 intentos fallidos.";
+      } else {
+        mensajeDeErrorVisible = "Credenciales incorrectas. Intento $contadorIntentosFallidos de 5.";
+      }
+      
+      estaCargandoDatos = false;
       notifyListeners();
       return false;
     }
+
+    estaCargandoDatos = false;
+    contadorIntentosFallidos = 0; 
+    notifyListeners(); 
+    return true; 
   }
-  }
+}

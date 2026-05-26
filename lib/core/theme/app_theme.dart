@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:google_fonts/google_fonts.dart";
 
 class AppTheme {
   static ThemeData get lightTheme {
@@ -12,9 +11,7 @@ class AppTheme {
         secondary: Color(0xFFD6EAF8),
         surface: Colors.white,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(
-        ThemeData.light().textTheme,
-      ),
+      textTheme: ThemeData.light().textTheme,
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF4682B4),
         foregroundColor: Colors.white,
@@ -31,14 +28,14 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: const Color(0xFF4682B4).withOpacity(0.15),
+            color: const Color(0xFF4682B4).withValues(alpha: 0.15),
             width: 1.2,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: const Color(0xFF4682B4).withOpacity(0.15),
+            color: const Color(0xFF4682B4).withValues(alpha: 0.15),
             width: 1.2,
           ),
         ),
@@ -73,9 +70,7 @@ class AppTheme {
         secondary: Color(0xFF2A3441),
         surface: Color(0xFF1B2430),
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(
-        ThemeData.dark().textTheme,
-      ),
+      textTheme: ThemeData.dark().textTheme,
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF1B2430),
         foregroundColor: Colors.white,
@@ -92,14 +87,14 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             width: 1.2,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             width: 1.2,
           ),
         ),
