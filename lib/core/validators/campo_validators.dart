@@ -1,5 +1,6 @@
 import 'package:rut_validator/rut_validator.dart';
 import '../constants/app_config.dart';
+import 'password_validator.dart';
 
 /// [RF2] [RF13] Validadores centralizados para campos del formulario
 /// Separados para facilitar testing y reutilización
@@ -72,19 +73,6 @@ class CampoValidators {
     return null;
   }
 
-  /// [RF2] Valida cargo: obligatorio y debe existir en el sistema
-  static String? validarCargo(String? value) {
-    if (value == null) {
-      return 'Debes seleccionar un cargo';
-    }
-    
-    if (!AppConfig.cargoValido(value)) {
-      return 'El cargo seleccionado no existe en el sistema';
-    }
-    
-    return null;
-  }
-
   /// [RF13] Valida rol: obligatorio, debe existir y ser válido para el cargo
   static String? validarRol(String? value, String? cargoSeleccionado) {
     if (value == null) {
@@ -99,6 +87,26 @@ class CampoValidators {
     if (cargoSeleccionado != null && 
         !AppConfig.combinacionValida(cargoSeleccionado, value)) {
       return 'El rol "$value" no es válido para el cargo "$cargoSeleccionado"';
+    }
+    
+    return null;
+  }
+
+  /// [RF13] Valida cargo contra rol seleccionado (validación bidireccional)
+  /// Verifica que un cargo sea válido para el rol ya seleccionado
+  static String? validarCargoPorRol(String? value, String? rolSeleccionado) {
+    if (value == null) {
+      return 'Debes seleccionar un cargo';
+    }
+    
+    if (!AppConfig.cargoValido(value)) {
+      return 'El cargo seleccionado no existe en el sistema';
+    }
+    
+    // Valida que el cargo sea permitido para el rol seleccionado
+    if (rolSeleccionado != null && 
+        !AppConfig.combinacionValida(value, rolSeleccionado)) {
+      return 'El cargo "$value" no es válido para el rol "$rolSeleccionado"';
     }
     
     return null;
@@ -126,5 +134,15 @@ class CampoValidators {
     }
     
     return null;
+  }
+
+  /// [RF1] [RNF5] Valida contraseña: delega a PasswordValidator (Orquestación centralizada)
+  /// Requisitos: Mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número
+  /// Retorna null si es válida, mensaje de error específico si no
+  static String? validarContrasena(String? value) {
+    if (value == null) {
+      return 'La contraseña es obligatoria';
+    }
+    return PasswordValidator.validar(value);
   }
 }

@@ -9,6 +9,7 @@ abstract class AuthRemoteDataSource {
     required String rut, 
     required String password, 
     required String nombreCompleto,
+    required String cargo,
     required String rol,
     required bool estado,
   });
@@ -79,6 +80,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String rut, 
     required String password, 
     required String nombreCompleto,
+    required String cargo,
     required String rol,
     required bool estado,
   }) async {
@@ -92,13 +94,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       final String uidGenerado = credential.user!.uid;
 
-      // Guardamos la información inicial en la colección
+      // [BUG-04] Guardamos cargo real (no "Por asignar"), rol y demás información
       await _firestore.collection('usuarios').doc(uidGenerado).set({
         'id': uidGenerado,
         'rut': rut,
         'nombreCompleto': nombreCompleto,
         'correoElectronico': emailSimulado,
-        'cargo': 'Por asignar',
+        'cargo': cargo,
         'rol': rol,
         'sueldoBase': 0,
         'estado': estado,

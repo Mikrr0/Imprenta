@@ -1,10 +1,9 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:provider/provider.dart";
-import "package:proyecto/features/crear_perfil/screens/crear_perfil_page.dart";
-import "../../../../../core/validators/campo_validators.dart";
-import "../login_viewmodel.dart";
-import "home_page.dart";
+import "package:proyecto/core/validators/campo_validators.dart";
+import "package:proyecto/features/auth/presentation/viewmodels/login_viewmodel.dart";
+import "package:proyecto/features/auth/presentation/viewmodels/pages/home_page.dart";
 
 
 class LoginPage extends StatefulWidget {

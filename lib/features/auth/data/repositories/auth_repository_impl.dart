@@ -17,6 +17,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String rut, 
     required String password, 
     required String nombreCompleto,
+    required String cargo,
     required String rol,
     required bool estado,
   }) async {
@@ -24,6 +25,7 @@ class AuthRepositoryImpl implements AuthRepository {
       rut: rut,
       password: password,
       nombreCompleto: nombreCompleto,
+      cargo: cargo,
       rol: rol,
       estado: estado,
     );

@@ -1,7 +1,9 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "../personal_viewmodel.dart";
+import "../login_viewmodel.dart";
 import "profile_form_page.dart";
+import "login_page.dart";
 
 class PersonalListPage extends StatelessWidget {
   const PersonalListPage({super.key});
@@ -10,6 +12,33 @@ class PersonalListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final temaActual = Theme.of(context);
     final viewModel = context.watch<PersonalViewModel>();
+    
+    // [BUG-03] [RF17] Validar rol del usuario logueado
+    final loginViewModel = context.watch<LoginViewModel>();
+    final usuarioActual = loginViewModel.usuarioActual;
+    
+    // Si no hay sesión válida, redirigir a login
+    if (usuarioActual == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    
+    // [BUG-03] Si es Operario, mostrar su propio perfil en modo lectura
+    if (usuarioActual.rol == 'Operario') {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Mi Perfil", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ),
+        body: ProfileFormPage(
+          modoVisualizacion: true,
+          perfilAMostrar: usuarioActual,
+        ),
+      );
+    }
+    
+    // [BUG-03] Si es Jefe o Admin, mostrar lista de personal
     final trabajadores = viewModel.listaDeTrabajadoresGuardados;
 
     return Scaffold(
@@ -59,18 +88,21 @@ class PersonalListPage extends StatelessWidget {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: temaActual.colorScheme.primary,
-        foregroundColor: Colors.white,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ProfileFormPage()),
-          );
-        },
-        icon: const Icon(Icons.person_add),
-        label: const Text("Nuevo Usuario", style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
+      // [BUG-03] Botón de crear solo visible para Admin/Jefe
+      floatingActionButton: (usuarioActual.rol == 'Administrador' || usuarioActual.rol == 'Jefe')
+          ? FloatingActionButton.extended(
+              backgroundColor: temaActual.colorScheme.primary,
+              foregroundColor: Colors.white,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileFormPage(modoVisualizacion: false)),
+                );
+              },
+              icon: const Icon(Icons.person_add),
+              label: const Text("Nuevo Usuario", style: TextStyle(fontWeight: FontWeight.bold)),
+            )
+          : null,
     );
   }
 }

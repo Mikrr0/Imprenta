@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:proyecto/features/auth/domain/usecases/login_usecase.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart';
-import 'package:proyecto/core/validators/campo_validators.dart'; 
+import 'package:proyecto/core/validators/campo_validators.dart';
+import 'package:proyecto/core/constants/app_config.dart'; 
 
 class LoginViewModel extends ChangeNotifier {
   final LoginUseCase loginUseCase;
@@ -93,11 +94,29 @@ class LoginViewModel extends ChangeNotifier {
       return false;
     }
 
+    // [RF1] [RNF5] Validación de contraseña en capas (security layer)
+    final errorContrasena = CampoValidators.validarContrasena(password);
+    if (errorContrasena != null) {
+      estaRegistrando = false;
+      mensajeDeErrorVisible = errorContrasena;
+      notifyListeners();
+      return false;
+    }
+
+    // [RF13] Validación de combinación cargo-rol
+    if (!AppConfig.combinacionValida(cargo, rol)) {
+      estaRegistrando = false;
+      mensajeDeErrorVisible = 'La combinación de cargo y rol no es válida';
+      notifyListeners();
+      return false;
+    }
+
     try {
       await loginUseCase.registrarNuevoUsuario(
         rut: rut.trim(),
         password: password, 
         nombre: nombre.trim(),
+        cargo: cargo,
         rol: rol, 
         estado: true, 
       );

@@ -12,7 +12,17 @@ import '../../../../../core/services/logging_service.dart';
 import '../login_viewmodel.dart';
 
 class ProfileFormPage extends StatefulWidget {
-  const ProfileFormPage({super.key});
+  /// [RF17] Modo de visualización: true = ver mi perfil (lectura), false = crear nuevo perfil (edición)
+  final bool modoVisualizacion;
+  
+  /// [RF17] Perfil a mostrar en modo visualización (requerido si modoVisualizacion=true)
+  final PerfilTrabajador? perfilAMostrar;
+
+  const ProfileFormPage({
+    super.key,
+    this.modoVisualizacion = false,
+    this.perfilAMostrar,
+  });
 
   @override
   State<ProfileFormPage> createState() => _ProfileFormPageState();
@@ -40,6 +50,22 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     _correoController = TextEditingController();
     _sueldoController = TextEditingController();
     _passwordController = TextEditingController();
+
+    // [RF17] Si es modo visualización, cargar datos del perfil
+    if (widget.modoVisualizacion && widget.perfilAMostrar != null) {
+      _cargarDatosPerfil(widget.perfilAMostrar!);
+    }
+  }
+
+  /// [RF17] Carga los datos del perfil en los controladores
+  void _cargarDatosPerfil(PerfilTrabajador perfil) {
+    _nombreController.text = perfil.nombreCompleto;
+    _rutController.text = perfil.rut;
+    _correoController.text = perfil.correoElectronico;
+    _sueldoController.text = perfil.sueldoBase.toStringAsFixed(0);
+    _cargoSeleccionado = perfil.cargo;
+    _rolSeleccionado = perfil.rol;
+    // La contraseña no se muestra en modo visualización
   }
 
   @override
@@ -52,25 +78,42 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     super.dispose();
   }
 
-  List<String> _obtenerRolesParaCargo() {
-    if (_cargoSeleccionado == null) return [];
-    return AppConfig.getRolesParaCargo(_cargoSeleccionado!);
+  List<String> _obtenerCargosParaRol() {
+    if (_rolSeleccionado == null) return [];
+    return AppConfig.getCargosParaRol(_rolSeleccionado!);
   }
 
+  /// [RF13] Handler para cuando cambia el cargo - valida compatibilidad con rol
   void _alCambiarCargo(String? nuevoCargo) {
     setState(() {
       _cargoSeleccionado = nuevoCargo;
-      if (_rolSeleccionado != null && nuevoCargo != null) {
-        final rolesValidos = _obtenerRolesParaCargo();
-        if (!rolesValidos.contains(_rolSeleccionado)) {
-          _rolSeleccionado = null;
+    });
+  }
+
+  /// [RF13] Handler para cuando cambia el rol - filtra cargos automáticamente
+  /// ROMPEDOR DE DEADLOCK: Rol es independiente, Cargo es dependiente
+  void _alCambiarRol(String? nuevoRol) {
+    setState(() {
+      _rolSeleccionado = nuevoRol;
+      // Si hay un cargo seleccionado y el nuevo rol no es compatible, resetearlo
+      if (_cargoSeleccionado != null && nuevoRol != null) {
+        final cargosValidos = AppConfig.getCargosParaRol(nuevoRol);
+        if (!cargosValidos.contains(_cargoSeleccionado)) {
+          _cargoSeleccionado = null;
         }
       }
     });
   }
 
-  String? _validarRolConCargo(String? value) {
-    return CampoValidators.validarRol(value, _cargoSeleccionado);
+  /// [RF13] Valida cargo contra rol seleccionado (validación bidireccional)
+  String? _validarCargoConRol(String? value) {
+    return CampoValidators.validarCargoPorRol(value, _rolSeleccionado);
+  }
+
+  /// [BUG-04] [RF17] Determina si los campos deben estar congelados (readOnly: true)
+  /// Los campos se congelan en modo visualización (solo lectura del perfil propio)
+  bool _debenEstarCongelados() {
+    return widget.modoVisualizacion;
   }
 
   void _guardarPerfil() async {
@@ -201,8 +244,11 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final congelado = _debenEstarCongelados();
+    final tituloAppBar = widget.modoVisualizacion ? 'Mi Perfil' : 'Crear Perfil de Trabajador';
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Crear Perfil de Trabajador')),
+      appBar: AppBar(title: Text(tituloAppBar)),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -211,25 +257,29 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.info),
+                // [BUG-04] Solo mostrar mensaje informativo en modo creación
+                if (!widget.modoVisualizacion) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.info),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info, color: AppColors.info, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(child: Text('Solo administradores pueden crear perfiles', style: TextStyle(color: AppColors.info, fontSize: 12))),
+                      ],
+                    ),
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info, color: AppColors.info, size: 20),
-                      SizedBox(width: 8),
-                      Expanded(child: Text('Solo administradores pueden crear perfiles', style: TextStyle(color: AppColors.info, fontSize: 12))),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                ],
 
                 TextFormField(
                   controller: _nombreController,
+                  readOnly: congelado,
                   decoration: const InputDecoration(labelText: 'Nombre completo', hintText: 'Ej: Juan Pérez', prefixIcon: Icon(Icons.person)),
                   validator: CampoValidators.validarNombre,
                 ),
@@ -237,6 +287,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
 
                 TextFormField(
                   controller: _rutController,
+                  readOnly: congelado,
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\-\.kK]'))],
                   decoration: const InputDecoration(labelText: 'RUT', hintText: 'Ej: 12.345.678-9', prefixIcon: Icon(Icons.badge)),
                   validator: CampoValidators.validarRut,
@@ -245,54 +296,103 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
 
                 TextFormField(
                   controller: _correoController,
+                  readOnly: congelado,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'Correo electrónico', hintText: 'Ej: juan@imprenta.cl', prefixIcon: Icon(Icons.email)),
                   validator: CampoValidators.validarCorreo,
                 ),
                 const SizedBox(height: 16),
 
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Contraseña inicial', hintText: 'Mínimo 6 caracteres', prefixIcon: Icon(Icons.lock)),
-                  obscureText: true,
-                  validator: (value) => value == null || value.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : null,
-                ),
-                const SizedBox(height: 16),
+                // [RF1] [RNF5] Campo de contraseña - oculto en modo visualización
+                if (!widget.modoVisualizacion)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: const InputDecoration(
+                          labelText: 'Contraseña inicial',
+                          hintText: 'Mín 8 caracteres (mayúscula, minúscula, número)',
+                          prefixIcon: Icon(Icons.lock),
+                          helperText: 'Ej: Pass1234',
+                          isDense: true,
+                          errorMaxLines: 3,
+                        ),
+                        obscureText: true,
+                        validator: CampoValidators.validarContrasena,
+                      ),
+                    ],
+                  ),
+                if (!widget.modoVisualizacion) const SizedBox(height: 16),
 
-                DropdownButtonFormField<String>(
-                  value: _cargoSeleccionado,
-                  decoration: const InputDecoration(labelText: 'Cargo', prefixIcon: Icon(Icons.work)),
-                  items: AppConfig.todosCargos.map((cargo) => DropdownMenuItem(value: cargo, child: Text(cargo))).toList(),
-                  onChanged: _alCambiarCargo,
-                  validator: CampoValidators.validarCargo,
-                ),
-                const SizedBox(height: 16),
+                if (!widget.modoVisualizacion) const SizedBox(height: 16),
 
+                // [RF13] ROMPEDOR DE DEADLOCK: Rol es INDEPENDIENTE, siempre visible y con lista completa
                 DropdownButtonFormField<String>(
                   value: _rolSeleccionado,
-                  decoration: const InputDecoration(labelText: 'Rol de Seguridad', prefixIcon: Icon(Icons.security), helperText: 'Roles disponibles para el cargo'),
-                  items: _obtenerRolesParaCargo().map((rol) => DropdownMenuItem(value: rol, child: Text(rol))).toList(),
-                  onChanged: _cargoSeleccionado != null ? (value) => setState(() => _rolSeleccionado = value) : null,
-                  validator: _validarRolConCargo,
-                  disabledHint: const Text('Selecciona un cargo primero'),
+                  decoration: const InputDecoration(
+                    labelText: 'Rol de Seguridad', 
+                    prefixIcon: Icon(Icons.security), 
+                    helperText: 'Selecciona el rol del trabajador',
+                  ),
+                  items: AppConfig.todosRoles
+                    .map((rol) => DropdownMenuItem(value: rol, child: Text(rol)))
+                    .toList(),
+                  onChanged: congelado ? null : _alCambiarRol,
+                  validator: (value) => CampoValidators.validarRol(value, _cargoSeleccionado),
+                  hint: const Text('Selecciona un rol'),
+                ),
+                const SizedBox(height: 16),
+
+                // [RF13] Cargo es DEPENDIENTE, deshabilitado hasta que haya Rol
+                DropdownButtonFormField<String>(
+                  value: _cargoSeleccionado,
+                  decoration: InputDecoration(
+                    labelText: 'Cargo', 
+                    prefixIcon: const Icon(Icons.work),
+                    helperText: _rolSeleccionado != null 
+                      ? 'Cargos disponibles para el rol seleccionado'
+                      : 'Selecciona un rol primero',
+                  ),
+                  items: _rolSeleccionado == null 
+                    ? [] 
+                    : _obtenerCargosParaRol()
+                        .map((cargo) => DropdownMenuItem(value: cargo, child: Text(cargo)))
+                        .toList(),
+                  onChanged: (congelado || _rolSeleccionado == null) ? null : _alCambiarCargo,
+                  validator: _validarCargoConRol,
+                  disabledHint: const Text('Selecciona un rol primero'),
                 ),
                 const SizedBox(height: 16),
 
                 TextFormField(
                   controller: _sueldoController,
+                  readOnly: congelado,
                   decoration: const InputDecoration(labelText: 'Sueldo base (CLP)', hintText: 'Ej: 500000', prefixIcon: Icon(Icons.attach_money), helperText: 'Mínimo legal: \$460.000'),
                   keyboardType: TextInputType.number,
                   validator: CampoValidators.validarSueldo,
                 ),
                 const SizedBox(height: 32),
 
-                Row(
-                  children: [
-                    Expanded(child: ElevatedButton.icon(onPressed: _guardarPerfil, icon: const Icon(Icons.send), label: const Text('Guardar perfil'))),
-                    const SizedBox(width: 12),
-                    Expanded(child: OutlinedButton.icon(onPressed: _limpiarFormulario, icon: const Icon(Icons.clear), label: const Text('Limpiar'))),
-                  ],
-                ),
+                // [BUG-04] [RF17] Botones: en modo visualización solo mostrar botón de volver
+                if (!widget.modoVisualizacion)
+                  Row(
+                    children: [
+                      Expanded(child: ElevatedButton.icon(onPressed: _guardarPerfil, icon: const Icon(Icons.send), label: const Text('Guardar perfil'))),
+                      const SizedBox(width: 12),
+                      Expanded(child: OutlinedButton.icon(onPressed: _limpiarFormulario, icon: const Icon(Icons.clear), label: const Text('Limpiar'))),
+                    ],
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Volver'),
+                    ),
+                  ),
               ],
             ),
           ),
