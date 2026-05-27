@@ -16,6 +16,7 @@ class LoginUseCase {
     required String rut, 
     required String password, 
     required String nombre,
+    required String cargo,
     required String rol,
     required bool estado,
   }) async {
@@ -23,6 +24,7 @@ class LoginUseCase {
       rut: rut, 
       password: password, 
       nombreCompleto: nombre,
+      cargo: cargo,
       rol: rol,
       estado: estado,
     );

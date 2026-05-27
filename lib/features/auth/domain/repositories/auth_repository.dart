@@ -8,6 +8,7 @@ abstract class AuthRepository {
     required String rut, 
     required String password, 
     required String nombreCompleto,
+    required String cargo,
     required String rol,
     required bool estado,
   });

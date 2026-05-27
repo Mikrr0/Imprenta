@@ -1,10 +1,9 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:provider/provider.dart";
-import "package:proyecto/features/crear_perfil/screens/crear_perfil_page.dart";
-import "../../../../../core/validators/campo_validators.dart";
-import "../login_viewmodel.dart";
-import "home_page.dart";
+import "package:proyecto/core/validators/campo_validators.dart";
+import "package:proyecto/features/auth/presentation/viewmodels/login_viewmodel.dart";
+import "package:proyecto/features/auth/presentation/viewmodels/pages/home_page.dart";
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -277,25 +276,28 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
+<<<<<<< HEAD
+=======
+                  
+>>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CrearPerfilPage(),
-                        ),
-                      );
+
                     },
                     child: Text(
-                      "¿Nuevo trabajador? Registrar aquí",
+                      "¿Olvidaste tu contraseña?",
                       style: TextStyle(
-                        color: colorPrincipal,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                      color: colorPrincipal,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                       ),
                     ),
+<<<<<<< HEAD
                   ),
+=======
+                  )
+>>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
                 ],
                 ),
               ),

@@ -3,9 +3,16 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "../../../../../core/theme/theme_provider.dart";
+<<<<<<< HEAD
 import "login_page.dart";
 import "personal_list_page.dart";
 import "profile_form_page.dart";
+=======
+import "../../../../../core/constants/app_config.dart";
+import "login_page.dart";
+import "personal_list_page.dart";
+import "../login_viewmodel.dart";
+>>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -83,6 +90,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final temaActual = Theme.of(context);
     final gestorDeTema = context.watch<ThemeProvider>();
+    
+    // [BUG-05] Consumir ViewModel para obtener usuario real autenticado
+    final loginViewModel = context.watch<LoginViewModel>();
+    final usuarioActual = loginViewModel.usuarioActual;
+    
+    // Si no hay usuario, redirigir a login (sesión expirada/inválida)
+    if (usuarioActual == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -135,6 +154,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // [BUG-05] Mostrar datos dinámicos del usuario autenticado desde Firebase
             Card(
               color: temaActual.colorScheme.surface,
               child: ListTile(
@@ -142,6 +162,7 @@ class _HomePageState extends State<HomePage> {
                   backgroundColor: temaActual.colorScheme.primary,
                   child: const Icon(Icons.person, color: Colors.white),
                 ),
+<<<<<<< HEAD
                 title: Text(
                   "Bernardo Arenas",
                   style: TextStyle(
@@ -155,6 +176,10 @@ class _HomePageState extends State<HomePage> {
                     color: temaActual.textTheme.bodyMedium?.color,
                   ),
                 ),
+=======
+                title: Text(usuarioActual.nombreCompleto, style: TextStyle(fontWeight: FontWeight.bold, color: temaActual.textTheme.bodyLarge?.color)),
+                subtitle: Text("Rol: ${usuarioActual.rol} | Cargo: ${usuarioActual.cargo}", style: TextStyle(color: temaActual.textTheme.bodyMedium?.color)),
+>>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
               ),
             ),
             const SizedBox(height: 24),
@@ -210,6 +235,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
+<<<<<<< HEAD
                   _construirTarjetaModulo(
                     context,
                     Icons.assignment,
@@ -247,6 +273,39 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   _construirTarjetaModulo(context, Icons.bar_chart, "Reportes"),
+=======
+                  // [HU01] [RF4] Órdenes de Producción
+                  // Jefe de Taller supervisa + Administrador para auditoría
+                  if (AppConfig.puedeVerOrdenesDeProduccion(usuarioActual.rol, usuarioActual.cargo))
+                    _construirTarjetaModulo(context, Icons.assignment, "Órdenes de\nTrabajo"),
+
+                  // [HU03] [HU09] [RF7] Gestión de Inventario / Insumos
+                  // Encargado de Bodega gestiona + Administrador para supervisión
+                  if (AppConfig.puedeGestionarInventario(usuarioActual.rol, usuarioActual.cargo))
+                    _construirTarjetaModulo(context, Icons.inventory, "Insumos"),
+
+                  // [RF4] [RF5] [HU02] [HU06] Producción / Mis Tareas
+                  // Jefe supervisa + Operarios ven tareas + Administrador monitorea
+                  if (AppConfig.puedeVerProduccion(usuarioActual.rol, usuarioActual.cargo))
+                    _construirTarjetaModulo(context, Icons.precision_manufacturing, "Producción"),
+
+                  // [RF14-a] [HU12] Gestión de Trabajadores / Perfiles (STRICT)
+                  // SOLO Administrador con cargo Administrador puede entrar
+                  if (AppConfig.puedeGestionarTrabajadores(usuarioActual.rol, usuarioActual.cargo))
+                    _construirTarjetaModulo(
+                      context, 
+                      Icons.people, 
+                      "Gestión de\nPersonal",
+                      accionAlPresionar: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalListPage()));
+                      },
+                    ),
+
+                  // [RF9] [RF11] [HU14] Reportes Analíticos
+                  // Cualquier Administrador (Gerente o Administrador)
+                  if (AppConfig.puedeVerReportes(usuarioActual.rol, usuarioActual.cargo))
+                    _construirTarjetaModulo(context, Icons.bar_chart, "Reportes"),
+>>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
                 ],
               ),
             ),
