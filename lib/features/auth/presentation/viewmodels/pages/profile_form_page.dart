@@ -10,6 +10,7 @@ import '../../../../../core/models/perfil_trabajador.dart';
 import '../../../../../core/services/audit_service.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../login_viewmodel.dart';
+import '../personal_viewmodel.dart'; // Agregamos el import de la lista
 
 class ProfileFormPage extends StatefulWidget {
   /// [RF17] Modo de visualización: true = ver mi perfil (lectura), false = crear nuevo perfil (edición)
@@ -38,18 +39,12 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
   late final TextEditingController _sueldoController;
   late final TextEditingController _passwordController;
 
-<<<<<<< HEAD
-  final TextEditingController controladorNombreCompleto =
-      TextEditingController();
-  final TextEditingController controladorRutTrabajador =
-      TextEditingController();
-  final TextEditingController controladorCorreoLaboral =
-      TextEditingController();
-=======
   String? _cargoSeleccionado;
   String? _rolSeleccionado;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
->>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
+
+  // Variable para saber si estamos editando un trabajador existente
+  bool get esModoEdicion => !widget.modoVisualizacion && widget.perfilAMostrar != null;
 
   @override
   void initState() {
@@ -60,26 +55,12 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     _sueldoController = TextEditingController();
     _passwordController = TextEditingController();
 
-<<<<<<< HEAD
-  final List<String> listadoDeCargosDisponibles = [
-    "Impresor",
-    "Diseñador",
-    "Bodeguero",
-    "Supervisor",
-  ];
-  final List<String> listadoDeRolesAdministrativos = [
-    "Administrador",
-    "Jefe",
-    "Operario",
-  ];
-=======
-    // [RF17] Si es modo visualización, cargar datos del perfil
-    if (widget.modoVisualizacion && widget.perfilAMostrar != null) {
+    // Si nos pasan un perfil (ya sea para Ver o para Editar), llenamos los campos
+    if (widget.perfilAMostrar != null) {
       _cargarDatosPerfil(widget.perfilAMostrar!);
     }
   }
 
-  /// [RF17] Carga los datos del perfil en los controladores
   void _cargarDatosPerfil(PerfilTrabajador perfil) {
     _nombreController.text = perfil.nombreCompleto;
     _rutController.text = perfil.rut;
@@ -87,9 +68,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     _sueldoController.text = perfil.sueldoBase.toStringAsFixed(0);
     _cargoSeleccionado = perfil.cargo;
     _rolSeleccionado = perfil.rol;
-    // La contraseña no se muestra en modo visualización
   }
->>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
 
   @override
   void dispose() {
@@ -106,19 +85,15 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     return AppConfig.getCargosParaRol(_rolSeleccionado!);
   }
 
-  /// [RF13] Handler para cuando cambia el cargo - valida compatibilidad con rol
   void _alCambiarCargo(String? nuevoCargo) {
     setState(() {
       _cargoSeleccionado = nuevoCargo;
     });
   }
 
-  /// [RF13] Handler para cuando cambia el rol - filtra cargos automáticamente
-  /// ROMPEDOR DE DEADLOCK: Rol es independiente, Cargo es dependiente
   void _alCambiarRol(String? nuevoRol) {
     setState(() {
       _rolSeleccionado = nuevoRol;
-      // Si hay un cargo seleccionado y el nuevo rol no es compatible, resetearlo
       if (_cargoSeleccionado != null && nuevoRol != null) {
         final cargosValidos = AppConfig.getCargosParaRol(nuevoRol);
         if (!cargosValidos.contains(_cargoSeleccionado)) {
@@ -128,80 +103,82 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
     });
   }
 
-  /// [RF13] Valida cargo contra rol seleccionado (validación bidireccional)
   String? _validarCargoConRol(String? value) {
     return CampoValidators.validarCargoPorRol(value, _rolSeleccionado);
   }
 
-  /// [BUG-04] [RF17] Determina si los campos deben estar congelados (readOnly: true)
-  /// Los campos se congelan en modo visualización (solo lectura del perfil propio)
   bool _debenEstarCongelados() {
     return widget.modoVisualizacion;
   }
 
   void _guardarPerfil() async {
     if (_formKey.currentState!.validate()) {
-      final vm = Provider.of<LoginViewModel>(context, listen: false);
+      
+      // -- FLUJO 1: EDITAR UN TRABAJADOR EXISTENTE --
+      if (esModoEdicion) {
+        final personalVM = Provider.of<PersonalViewModel>(context, listen: false);
+        final idTrabajador = widget.perfilAMostrar!.id!; // El ID de Firebase
 
-      final exito = await vm.registrarTrabajadorCompleto(
-        nombre: _nombreController.text,
-        rut: _rutController.text,
-        correo: _correoController.text,
-        cargo: _cargoSeleccionado!,
-        rol: _rolSeleccionado!,
-        sueldoTexto: _sueldoController.text,
-        password: _passwordController.text,
-      );
+        final nuevosDatos = {
+          'nombreCompleto': _nombreController.text.trim(),
+          'correoElectronico': _correoController.text.trim(),
+          'cargo': _cargoSeleccionado!,
+          'rol': _rolSeleccionado!,
+          'sueldoBase': double.parse(_sueldoController.text),
+        };
 
-<<<<<<< HEAD
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Perfil creado exitosamente",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Por favor, complete todos los campos obligatorios",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-=======
-      if (!mounted) return;
+        final exito = await personalVM.actualizarTrabajador(idTrabajador, nuevosDatos);
 
-      if (exito) {
-        final rutFormateado = RutValidator.format(_rutController.text);
-        final perfil = PerfilTrabajador(
-          rut: _rutController.text.trim(),
-          nombreCompleto: _nombreController.text.trim(),
-          correoElectronico: _correoController.text.trim(),
+        if (!mounted) return;
+
+        if (exito) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trabajador actualizado correctamente'), backgroundColor: Colors.green));
+          Navigator.pop(context); // Regresa a la lista
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al actualizar el trabajador'), backgroundColor: Colors.red));
+        }
+      } 
+      // -- FLUJO 2: CREAR UN TRABAJADOR NUEVO --
+      else {
+        final vm = Provider.of<LoginViewModel>(context, listen: false);
+
+        final exito = await vm.registrarTrabajadorCompleto(
+          nombre: _nombreController.text,
+          rut: _rutController.text,
+          correo: _correoController.text,
           cargo: _cargoSeleccionado!,
           rol: _rolSeleccionado!,
-          sueldoBase: double.parse(_sueldoController.text),
+          sueldoTexto: _sueldoController.text,
+          password: _passwordController.text,
         );
 
-        _auditService.registrarIntentoCreacionPerfil(perfil);
-        _auditService.registrarExitoCreacionPerfil(perfil);
-        _loggingService.registrarCreacionExitosa(perfil);
+        if (!mounted) return;
 
-        _mostrarDialogoExito(perfil, rutFormateado);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(vm.mensajeDeErrorVisible ?? 'Error de conexión'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (exito) {
+          final rutFormateado = RutValidator.format(_rutController.text);
+          final perfil = PerfilTrabajador(
+            rut: _rutController.text.trim(),
+            nombreCompleto: _nombreController.text.trim(),
+            correoElectronico: _correoController.text.trim(),
+            cargo: _cargoSeleccionado!,
+            rol: _rolSeleccionado!,
+            sueldoBase: double.parse(_sueldoController.text),
+          );
+
+          _auditService.registrarIntentoCreacionPerfil(perfil);
+          _auditService.registrarExitoCreacionPerfil(perfil);
+          _loggingService.registrarCreacionExitosa(perfil);
+
+          _mostrarDialogoExito(perfil, rutFormateado);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(vm.mensajeDeErrorVisible ?? 'Error de conexión'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
->>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
     }
   }
 
@@ -291,168 +268,13 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
   @override
   Widget build(BuildContext context) {
     final congelado = _debenEstarCongelados();
-    final tituloAppBar = widget.modoVisualizacion ? 'Mi Perfil' : 'Crear Perfil de Trabajador';
+    
+    // Cambiar el título de arriba según lo que estemos haciendo
+    String tituloAppBar = 'Crear Perfil de Trabajador';
+    if (widget.modoVisualizacion) tituloAppBar = 'Mi Perfil';
+    if (esModoEdicion) tituloAppBar = 'Editar Trabajador';
     
     return Scaffold(
-<<<<<<< HEAD
-      appBar: AppBar(
-        title: const Text(
-          "Crear Nuevo Perfil",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: llaveDelFormulario,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Datos del Trabajador",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: temaActual.textTheme.bodyLarge?.color,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              TextFormField(
-                controller: controladorNombreCompleto,
-                style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
-                decoration: InputDecoration(
-                  labelText: "Nombre Completo",
-                  filled: true,
-                  fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (valorIngresado) =>
-                    valorIngresado == null || valorIngresado.isEmpty
-                    ? "Debe ingresar el nombre"
-                    : null,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: controladorRutTrabajador,
-                style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9\-\.kK]')),
-                ],
-                decoration: InputDecoration(
-                  labelText: "RUT",
-                  hintText: "12.345.678-9",
-                  filled: true,
-                  fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: CampoValidators.validarRut,
-                onChanged: (value) {
-                  if (value.isNotEmpty) {
-                    final formatted = CampoValidators.formatearRut(value);
-                    if (formatted != value) {
-                      controladorRutTrabajador.value = TextEditingValue(
-                        text: formatted,
-                        selection: TextSelection.fromPosition(
-                          TextPosition(offset: formatted.length),
-                        ),
-                      );
-                    }
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: controladorCorreoLaboral,
-                style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: "Correo Electrónico",
-                  filled: true,
-                  fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (valorIngresado) =>
-                    valorIngresado == null || valorIngresado.isEmpty
-                    ? "Debe ingresar el correo"
-                    : null,
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: "Cargo",
-                  filled: true,
-                  fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                dropdownColor: temaActual.colorScheme.surface,
-                style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
-                initialValue: valorCargoSeleccionado,
-                items: listadoDeCargosDisponibles
-                    .map(
-                      (cargo) =>
-                          DropdownMenuItem(value: cargo, child: Text(cargo)),
-                    )
-                    .toList(),
-                onChanged: (nuevoValor) =>
-                    setState(() => valorCargoSeleccionado = nuevoValor),
-                validator: (valorSeleccionado) =>
-                    valorSeleccionado == null ? "Seleccione un cargo" : null,
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: "Rol en el Sistema",
-                  filled: true,
-                  fillColor: temaActual.colorScheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                dropdownColor: temaActual.colorScheme.surface,
-                style: TextStyle(color: temaActual.textTheme.bodyLarge?.color),
-                initialValue: valorRolSeleccionado,
-                items: listadoDeRolesAdministrativos
-                    .map(
-                      (rol) => DropdownMenuItem(value: rol, child: Text(rol)),
-                    )
-                    .toList(),
-                onChanged: (nuevoValor) =>
-                    setState(() => valorRolSeleccionado = nuevoValor),
-                validator: (valorSeleccionado) =>
-                    valorSeleccionado == null ? "Seleccione un rol" : null,
-              ),
-              const SizedBox(height: 32),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: procesarGuardadoDePerfil,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: temaActual.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    "Guardar Perfil",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-=======
       appBar: AppBar(title: Text(tituloAppBar)),
       body: SingleChildScrollView(
         child: Padding(
@@ -462,8 +284,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // [BUG-04] Solo mostrar mensaje informativo en modo creación
-                if (!widget.modoVisualizacion) ...[
+                if (!widget.modoVisualizacion && !esModoEdicion) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -487,13 +308,13 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   readOnly: congelado,
                   decoration: const InputDecoration(labelText: 'Nombre completo', hintText: 'Ej: Juan Pérez', prefixIcon: Icon(Icons.person)),
                   validator: CampoValidators.validarNombre,
->>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
                 ),
                 const SizedBox(height: 16),
 
                 TextFormField(
                   controller: _rutController,
-                  readOnly: congelado,
+                  // El RUT no se debería poder editar porque es la llave del correo, lo bloqueamos en modo edición
+                  readOnly: congelado || esModoEdicion,
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\-\.kK]'))],
                   decoration: const InputDecoration(labelText: 'RUT', hintText: 'Ej: 12.345.678-9', prefixIcon: Icon(Icons.badge)),
                   validator: CampoValidators.validarRut,
@@ -509,8 +330,8 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // [RF1] [RNF5] Campo de contraseña - oculto en modo visualización
-                if (!widget.modoVisualizacion)
+                // Ocultamos la contraseña en lectura Y en edición
+                if (!widget.modoVisualizacion && !esModoEdicion)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -527,13 +348,10 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                         obscureText: true,
                         validator: CampoValidators.validarContrasena,
                       ),
+                      const SizedBox(height: 16),
                     ],
                   ),
-                if (!widget.modoVisualizacion) const SizedBox(height: 16),
 
-                if (!widget.modoVisualizacion) const SizedBox(height: 16),
-
-                // [RF13] ROMPEDOR DE DEADLOCK: Rol es INDEPENDIENTE, siempre visible y con lista completa
                 DropdownButtonFormField<String>(
                   value: _rolSeleccionado,
                   decoration: const InputDecoration(
@@ -550,7 +368,6 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // [RF13] Cargo es DEPENDIENTE, deshabilitado hasta que haya Rol
                 DropdownButtonFormField<String>(
                   value: _cargoSeleccionado,
                   decoration: InputDecoration(
@@ -580,13 +397,28 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                 ),
                 const SizedBox(height: 32),
 
-                // [BUG-04] [RF17] Botones: en modo visualización solo mostrar botón de volver
                 if (!widget.modoVisualizacion)
                   Row(
                     children: [
-                      Expanded(child: ElevatedButton.icon(onPressed: _guardarPerfil, icon: const Icon(Icons.send), label: const Text('Guardar perfil'))),
-                      const SizedBox(width: 12),
-                      Expanded(child: OutlinedButton.icon(onPressed: _limpiarFormulario, icon: const Icon(Icons.clear), label: const Text('Limpiar'))),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _guardarPerfil, 
+                          icon: const Icon(Icons.send), 
+                          // Cambiamos el texto del botón si estamos editando
+                          label: Text(esModoEdicion ? 'Guardar Cambios' : 'Guardar Perfil'),
+                        )
+                      ),
+                      // Ocultamos el botón de limpiar en modo edición para evitar accidentes
+                      if (!esModoEdicion) ...[
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _limpiarFormulario, 
+                            icon: const Icon(Icons.clear), 
+                            label: const Text('Limpiar'),
+                          )
+                        ),
+                      ]
                     ],
                   )
                 else

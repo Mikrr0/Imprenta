@@ -276,10 +276,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-<<<<<<< HEAD
-=======
                   
->>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
@@ -293,11 +290,7 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 14,
                       ),
                     ),
-<<<<<<< HEAD
-                  ),
-=======
                   )
->>>>>>> 3609fb357747adcd105deabc0ff4769b80c7e55b
                 ],
                 ),
               ),

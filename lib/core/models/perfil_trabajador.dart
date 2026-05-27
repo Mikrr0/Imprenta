@@ -1,6 +1,7 @@
 /// [RF2] [RF13] Modelo de datos para perfil de trabajador
 /// Representa los datos capturados en el formulario de creación de perfil
 class PerfilTrabajador {
+  final String? id;
   final String nombreCompleto;
   final String rut;
   final String correoElectronico;
@@ -9,6 +10,7 @@ class PerfilTrabajador {
   final double sueldoBase;
 
   PerfilTrabajador({
+    this.id,
     required this.nombreCompleto,
     required this.rut,
     required this.correoElectronico,
@@ -17,7 +19,7 @@ class PerfilTrabajador {
     required this.sueldoBase,
   });
 
-  /// Convierte el modelo a un mapa (útil para serialización)
+  /// Convierte el modelo a un mapa para facilitar su almacenamiento o transmisión
   Map<String, dynamic> toMap() {
     return {
       'nombreCompleto': nombreCompleto,

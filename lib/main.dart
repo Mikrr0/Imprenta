@@ -5,11 +5,13 @@ import "core/theme/app_theme.dart";
 import "core/theme/theme_provider.dart";
 import "features/auth/presentation/viewmodels/pages/login_page.dart";
 import "features/auth/presentation/viewmodels/personal_viewmodel.dart";
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
