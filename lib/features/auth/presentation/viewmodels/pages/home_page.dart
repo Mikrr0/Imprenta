@@ -6,6 +6,7 @@ import "../../../../../core/constants/app_config.dart";
 import "login_page.dart";
 import "personal_list_page.dart";
 import "../login_viewmodel.dart";
+import "my_profile_page.dart";
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -65,7 +66,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        backgroundColor: simuladorConexionInternetActivo ? Colors.green : Colors.orange.shade700,
+        backgroundColor: simuladorConexionInternetActivo ? Colors.green : Theme.of(context).colorScheme.error,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -123,6 +124,9 @@ class _HomePageState extends State<HomePage> {
             Card(
               color: temaActual.colorScheme.surface,
               child: ListTile(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MyProfilePage()));
+                },
                 leading: CircleAvatar(
                   backgroundColor: temaActual.colorScheme.primary,
                   child: const Icon(Icons.person, color: Colors.white),
@@ -162,6 +166,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
+                childAspectRatio: 1.0, 
                 children: [
                   if (AppConfig.puedeVerOrdenesDeProduccion(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(context, Icons.assignment, "Órdenes de\nTrabajo"),
@@ -172,7 +177,6 @@ class _HomePageState extends State<HomePage> {
                   if (AppConfig.puedeVerProduccion(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(context, Icons.precision_manufacturing, "Producción"),
 
-                  // Agregamos la excepción de 'Administrador' para evadir el bloqueo de "Por asignar"
                   if (usuarioActual.rol == 'Administrador' || AppConfig.puedeGestionarTrabajadores(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(
                       context, 
@@ -200,17 +204,20 @@ class _HomePageState extends State<HomePage> {
       color: temaActual.colorScheme.surface,
       child: InkWell(
         onTap: accionAlPresionar,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icono, size: 48, color: temaActual.colorScheme.primary),
-            const SizedBox(height: 16),
-            Text(
-              tituloMenu,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w600, color: temaActual.textTheme.bodyLarge?.color),
-            ),
-          ],
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icono, size: 48, color: temaActual.colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(
+                tituloMenu,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w600, color: temaActual.textTheme.bodyLarge?.color),
+              ),
+            ],
+          ),
         ),
       ),
     );

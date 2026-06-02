@@ -5,15 +5,16 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: const Color(0xFFF8FAFD),
-      primaryColor: const Color(0xFF4682B4),
+      primaryColor: const Color(0xFF0056b3), // Actualizado según Sprint 5
       colorScheme: const ColorScheme.light(
-        primary: Color(0xFF4682B4),
-        secondary: Color(0xFFD6EAF8),
+        primary: Color(0xFF0056b3), // Azul UI Kit global
+        secondary: Color(0xFFf9a825), // Amarillo para advertencias
+        error: Color(0xFFd32f2f), // Rojo para errores de sincronización
         surface: Colors.white,
       ),
       textTheme: ThemeData.light().textTheme,
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF4682B4),
+        backgroundColor: Color(0xFF0056b3), // Actualizado según Sprint 5
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -28,28 +29,28 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: const Color(0xFF4682B4).withValues(alpha: 0.15),
+            color: const Color(0xFF0056b3).withValues(alpha: 0.15),
             width: 1.2,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: const Color(0xFF4682B4).withValues(alpha: 0.15),
+            color: const Color(0xFF0056b3).withValues(alpha: 0.15),
             width: 1.2,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(
-            color: Color(0xFF4682B4),
+            color: Color(0xFF0056b3),
             width: 1.8,
           ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4682B4),
+          backgroundColor: const Color(0xFF0056b3), // Actualizado según Sprint 5
           foregroundColor: Colors.white,
           elevation: 4,
           shape: RoundedRectangleBorder(
@@ -64,10 +65,11 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF121826),
-      primaryColor: const Color(0xFF6FA8DC),
+      primaryColor: const Color(0xFF6FA8DC), // Mantenemos el azul claro para modo oscuro
       colorScheme: const ColorScheme.dark(
         primary: Color(0xFF6FA8DC),
-        secondary: Color(0xFF2A3441),
+        secondary: Color(0xFFf9a825), // Amarillo para advertencias
+        error: Color(0xFFd32f2f), // Rojo para errores críticos
         surface: Color(0xFF1B2430),
       ),
       textTheme: ThemeData.dark().textTheme,

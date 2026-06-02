@@ -4,6 +4,7 @@ import "package:provider/provider.dart";
 import "package:proyecto/core/validators/campo_validators.dart";
 import "package:proyecto/features/auth/presentation/viewmodels/login_viewmodel.dart";
 import "package:proyecto/features/auth/presentation/viewmodels/pages/home_page.dart";
+import "recuperar_clave_page.dart";
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,8 +18,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController controladorRut = TextEditingController();
   final TextEditingController controladorContrasena = TextEditingController();
 
-  final Color colorPrincipal = const Color(0xFF4682B4);
-  final Color colorFondo = const Color(0xFFF8FAFD);
 
   String? _errorRutInvalido;
 
@@ -33,9 +32,13 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<LoginViewModel>();
 
+    final Color colorPrincipal = Theme.of(context).colorScheme.primary;
+    final Color colorFondo = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
       backgroundColor: colorFondo,
-      body: Center(
+      body: Align(
+        alignment: const Alignment(0, -0.4),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: ConstrainedBox(
@@ -47,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -61,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: colorPrincipal.withValues(alpha: 0.12),
+                      color: colorPrincipal.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -103,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.08),
+                        color: Colors.red.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Colors.red.shade200,
@@ -132,11 +135,12 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 24),
                   ],
+                  
                   if (_errorRutInvalido != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.08),
+                        color: Colors.red.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Colors.red.shade200,
@@ -165,6 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 24),
                   ],
+                  
                   _buildInputLabel("RUT"),
                   const SizedBox(height: 8),
                   TextFormField(
@@ -175,6 +180,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: _buildInputDecoration(
                       hint: "12.345.678-9",
                       icon: Icons.badge_outlined,
+                      colorPrincipal: colorPrincipal,
                     ),
                     validator: CampoValidators.validarRut,
                     onChanged: (value) {
@@ -209,6 +215,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: _buildInputDecoration(
                       hint: "••••••••",
                       icon: Icons.lock_outline,
+                      colorPrincipal: colorPrincipal,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -242,8 +249,7 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: colorPrincipal,
                         foregroundColor: Colors.white,
                         elevation: 4,
-                        shadowColor:
-                            colorPrincipal.withValues(alpha: 0.25),
+                        shadowColor: colorPrincipal.withOpacity(0.25),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -280,7 +286,12 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RecuperarClavePage(),
+                        ),
+                      );
                     },
                     child: Text(
                       "¿Olvidaste tu contraseña?",
@@ -318,6 +329,7 @@ class _LoginPageState extends State<LoginPage> {
   InputDecoration _buildInputDecoration({
     required String hint,
     required IconData icon,
+    required Color colorPrincipal,
   }) {
     final borderStyle = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
