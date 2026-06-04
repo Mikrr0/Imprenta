@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart';
@@ -7,13 +8,23 @@ class PersonalViewModel extends ChangeNotifier {
   
   List<PerfilTrabajador> listaTrabajadores = [];
   bool estaCargando = false;
+  
+  // Control de la escucha en vivo
+  StreamSubscription<QuerySnapshot>? _trabajadoresSubscription;
 
-  Future<void> cargarTrabajadores() async {
+  // Se cambia cargarTrabajadores() por un Stream reactivo
+  void iniciarEscuchaTrabajadores() {
     estaCargando = true;
     notifyListeners();
 
-    try {
-      final snapshot = await _firestore.collection('usuarios').get();
+    _trabajadoresSubscription?.cancel();
+
+    // Filtramos directamente en la base de datos: solo traemos a los que tienen estado == true
+    _trabajadoresSubscription = _firestore
+        .collection('usuarios')
+        .where('estado', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
       
       listaTrabajadores = snapshot.docs.map((doc) {
         final data = doc.data();
@@ -27,37 +38,43 @@ class PersonalViewModel extends ChangeNotifier {
           sueldoBase: (data['sueldoBase'] ?? 0).toDouble(),
         );
       }).toList();
-    } catch (e) {
-      print("Error al cargar trabajadores: $e");
-    }
 
-    estaCargando = false;
-    notifyListeners();
+      estaCargando = false;
+      notifyListeners();
+    }, onError: (error) {
+      print("Error al cargar trabajadores: $error");
+      estaCargando = false;
+      notifyListeners();
+    });
   }
 
   Future<bool> eliminarTrabajador(String idDoc) async {
     try {
-      await _firestore.collection('usuarios').doc(idDoc).delete();
-      listaTrabajadores.removeWhere((t) => t.id == idDoc);
-      notifyListeners();
+      // BORRADO LÓGICO (Soft Delete): Cambiamos el estado en vez de destruir el documento
+      await _firestore.collection('usuarios').doc(idDoc).update({'estado': false});
+      // El Stream detecta el cambio automáticamente y actualiza la lista. No hace falta notifyListeners().
       return true;
     } catch (e) {
-      print("Error al eliminar: $e");
+      print("Error al inhabilitar: $e");
       return false;
     }
   }
+
   // 3. ACTUALIZAR TRABAJADOR (EDITAR)
   Future<bool> actualizarTrabajador(String idDoc, Map<String, dynamic> nuevosDatos) async {
     try {
-      // Actualizamos los datos en Firebase
       await _firestore.collection('usuarios').doc(idDoc).update(nuevosDatos);
-      
-      // Volvemos a descargar la lista para que la pantalla se actualice al instante
-      await cargarTrabajadores(); 
+      // El Stream detecta el cambio automáticamente. Ya no hace falta recargar la lista manual.
       return true;
     } catch (e) {
       print("Error al actualizar: $e");
       return false;
     }
+  }
+
+  @override
+  void dispose() {
+    _trabajadoresSubscription?.cancel();
+    super.dispose();
   }
 }

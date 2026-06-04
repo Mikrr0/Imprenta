@@ -17,7 +17,8 @@ class _PersonalListPageState extends State<PersonalListPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PersonalViewModel>().cargarTrabajadores();
+      // Se llama a la nueva función reactiva
+      context.read<PersonalViewModel>().iniciarEscuchaTrabajadores();
     });
   }
 
@@ -54,7 +55,7 @@ class _PersonalListPageState extends State<PersonalListPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: "Actualizar lista",
-            onPressed: () => viewModel.cargarTrabajadores(),
+            onPressed: () => viewModel.iniciarEscuchaTrabajadores(),
           ),
         ],
       ),
@@ -75,10 +76,17 @@ class _PersonalListPageState extends State<PersonalListPage> {
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 80),
                   itemCount: viewModel.listaTrabajadores.length,
                   itemBuilder: (context, index) {
                     final trabajador = viewModel.listaTrabajadores[index];
+                    
+                    // --- NUEVA REGLA DE NEGOCIO Y SEGURIDAD ---
+                    // Ocultamos al usuario logeado para evitar que se auto-elimine.
+                    // Su edición debe hacerse exclusivamente desde la pantalla "Mi Perfil".
+                    if (trabajador.rut == usuarioActual.rut) {
+                      return const SizedBox.shrink(); // Retorna un widget invisible de 0 pixeles
+                    }
                     
                     return Card(
                       color: temaActual.colorScheme.surface,
@@ -111,13 +119,13 @@ class _PersonalListPageState extends State<PersonalListPage> {
                                   MaterialPageRoute(
                                     builder: (context) => ProfileFormPage(
                                       modoVisualizacion: false,
-                                      perfilAMostrar: trabajador, // Le enviamos los datos para editar
+                                      perfilAMostrar: trabajador, 
                                     ),
                                   ),
                                 );
                               },
                             ),
-                            // --- BOTÓN ELIMINAR ---
+                            // --- BOTÓN INHABILITAR ---
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
@@ -139,7 +147,7 @@ class _PersonalListPageState extends State<PersonalListPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileFormPage()), // Abre vacío para crear
+                  MaterialPageRoute(builder: (context) => const ProfileFormPage()), 
                 );
               },
               icon: const Icon(Icons.person_add),
@@ -155,8 +163,8 @@ class _PersonalListPageState extends State<PersonalListPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar Trabajador'),
-        content: const Text('¿Estás seguro de que deseas borrar este registro de la base de datos?'),
+        title: const Text('Inhabilitar Trabajador'),
+        content: const Text('¿Estás seguro de que deseas inhabilitar a este trabajador? No podrá volver a ingresar al sistema.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -169,11 +177,11 @@ class _PersonalListPageState extends State<PersonalListPage> {
               final exito = await vm.eliminarTrabajador(id);
               if (exito && mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Trabajador eliminado correctamente'), backgroundColor: Colors.green),
+                  const SnackBar(content: Text('Trabajador inhabilitado correctamente'), backgroundColor: Colors.green),
                 );
               }
             },
-            child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+            child: const Text('Inhabilitar', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

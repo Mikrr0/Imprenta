@@ -184,6 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     validator: CampoValidators.validarRut,
                     onChanged: (value) {
+                      context.read<LoginViewModel>().limpiarError();
                       if (value.isNotEmpty) {
                         final formatted = CampoValidators.formatearRut(value);
                         if (formatted != value) {
@@ -212,6 +213,8 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: controladorContrasena,
                     obscureText: true,
+                    // --- NUEVA LÍNEA: Limpiamos el error si corrige la contraseña ---
+                    onChanged: (value) => context.read<LoginViewModel>().limpiarError(),
                     decoration: _buildInputDecoration(
                       hint: "••••••••",
                       icon: Icons.lock_outline,

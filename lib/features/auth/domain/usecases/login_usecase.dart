@@ -1,5 +1,4 @@
 import 'package:proyecto/features/auth/domain/repositories/auth_repository.dart';
-// Importamos el modelo correcto de Benjamín
 import 'package:proyecto/core/models/perfil_trabajador.dart'; 
 
 class LoginUseCase {
@@ -7,25 +6,21 @@ class LoginUseCase {
 
   LoginUseCase(this.authRepository);
 
-  // Ahora retorna un PerfilTrabajador
+  /// Ejecuta la autenticación inicial devolviendo el perfil del trabajador
   Future<PerfilTrabajador> execute(String rut, String password) async {
     return await authRepository.login(rut, password);
   }
 
-  Future<void> registrarNuevoUsuario({
-    required String rut, 
-    required String password, 
-    required String nombre,
-    required String cargo,
-    required String rol,
+  /// [RF2] [RF14] Transporta de forma limpia la entidad canónica hacia el repositorio
+  /// Resguarda el sueldo base real y los metadatos capturados en el formulario
+  Future<void> registrarUsuario({
+    required PerfilTrabajador perfil,
+    required String password,
     required bool estado,
   }) async {
     return await authRepository.registrarUsuario(
-      rut: rut, 
-      password: password, 
-      nombreCompleto: nombre,
-      cargo: cargo,
-      rol: rol,
+      perfil: perfil,
+      password: password,
       estado: estado,
     );
   }
