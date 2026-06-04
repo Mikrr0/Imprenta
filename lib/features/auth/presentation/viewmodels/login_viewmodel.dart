@@ -3,18 +3,19 @@ import 'package:proyecto/features/auth/domain/usecases/login_usecase.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart';
 import 'package:proyecto/core/validators/campo_validators.dart';
 import 'package:proyecto/core/constants/app_config.dart'; 
+import 'package:proyecto/core/services/security_service.dart'; 
 
 class LoginViewModel extends ChangeNotifier {
   bool estaCargandoDatos = false;
   bool estaRegistrando = false; 
   String? mensajeDeErrorVisible;
-  int contadorIntentosFallidos = 0;
   
- 
   PerfilTrabajador? usuarioActual;
   
-  
   final LoginUseCase loginUseCase;
+  
+  // Instanciamos el servicio de seguridad para comunicarse con Firestore
+  final SecurityService _securityService = SecurityService();
 
   LoginViewModel({required this.loginUseCase});
 
@@ -23,16 +24,19 @@ class LoginViewModel extends ChangeNotifier {
     mensajeDeErrorVisible = null;
     notifyListeners(); 
 
-    // 1. Verificación de Bloqueo de Seguridad 
-    if (contadorIntentosFallidos >= 5) {
+    final rutLimpio = rutIngresado.trim();
+
+    // 1. Verificación de Bloqueo de Seguridad EN EL BACKEND (Firestore)
+    final bloqueado = await _securityService.estaBloqueado(rutLimpio);
+    if (bloqueado) {
       estaCargandoDatos = false;
-      mensajeDeErrorVisible = "Cuenta bloqueada temporalmente por 15 minutos tras 5 intentos fallidos.";
+      mensajeDeErrorVisible = "Por seguridad, cuenta bloqueada por 15 minutos tras 5 intentos fallidos.";
       notifyListeners();
       return false;
     }
 
     // 2. Validaciones de formato iniciales de Benjamín
-    final errorRut = CampoValidators.validarRut(rutIngresado.trim());
+    final errorRut = CampoValidators.validarRut(rutLimpio);
     if (errorRut != null) {
       estaCargandoDatos = false;
       mensajeDeErrorVisible = errorRut; 
@@ -42,25 +46,27 @@ class LoginViewModel extends ChangeNotifier {
 
     // 3. Conexión Real a Firebase Auth a través del UseCase
     try {
-      // Intentamos iniciar sesión con los datos del emulador
-      final perfil = await loginUseCase.execute(rutIngresado.trim(), contrasenaIngresada);
+      final perfil = await loginUseCase.execute(rutLimpio, contrasenaIngresada);
       
-      // Si la base de datos responde con éxito:
+      // ÉXITO: Limpiamos el historial de fallos de la base de datos
+      await _securityService.resetearIntentos(rutLimpio);
+      
       usuarioActual = perfil;
-      contadorIntentosFallidos = 0; // Reiniciamos los intentos fallidos
       estaCargandoDatos = false;
       notifyListeners(); 
       return true; 
 
     } catch (e) {
-      // Si Firebase rechaza la contraseña o el usuario no existe, entra aquí:
-      contadorIntentosFallidos++; 
+      // ERROR: Registramos el fallo en la base de datos
       estaCargandoDatos = false;
+      
+      // Firebase nos devuelve cuántos intentos fallidos lleva
+      int intentosActuales = await _securityService.registrarIntentoFallido(rutLimpio);
 
-      if (contadorIntentosFallidos >= 5) {
+      if (intentosActuales >= 5) {
         mensajeDeErrorVisible = "Cuenta bloqueada temporalmente por 15 minutos tras 5 intentos fallidos.";
       } else {
-        mensajeDeErrorVisible = "Credenciales incorrectas o usuario no registrado. Intento $contadorIntentosFallidos de 5.";
+        mensajeDeErrorVisible = "Credenciales incorrectas o usuario no registrado. Intento $intentosActuales de 5.";
       }
       
       notifyListeners();

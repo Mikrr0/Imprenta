@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:proyecto/core/models/perfil_trabajador.dart'; // <-- Cambiado el import
+import 'package:proyecto/core/models/perfil_trabajador.dart'; 
 
 abstract class AuthRemoteDataSource {
   Future<PerfilTrabajador> login(String rut, String password);
@@ -84,17 +84,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String rol,
     required bool estado,
   }) async {
+    
+    // 1. Declaramos la variable AFUERA del try para poder acceder a ella si hay error
+    auth.UserCredential? credential; 
+
     try {
       final String emailSimulado = _rutAEmail(rut);
 
-      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+      // 2. Creamos la cuenta en Firebase Auth
+      credential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: emailSimulado, 
         password: password,
       );
 
       final String uidGenerado = credential.user!.uid;
 
-      // [BUG-04] Guardamos cargo real (no "Por asignar"), rol y demás información
+      // 3. [BUG-04] Guardamos cargo real, rol y demás información en Firestore
       await _firestore.collection('usuarios').doc(uidGenerado).set({
         'id': uidGenerado,
         'rut': rut,
@@ -105,7 +110,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'sueldoBase': 0,
         'estado': estado,
       });
+
     } catch (e) {
+      // 4. [SOLUCIÓN AL BUG CRÍTICO] EL ROLLBACK
+      // Si la base de datos Firestore falló (por permisos, red, etc.), 
+      // pero el usuario sí se creó en Auth, procedemos a ELIMINARLO de Auth.
+      if (credential != null && credential.user != null) {
+        try {
+          await credential.user!.delete();
+          print("Rollback exitoso: Usuario eliminado de Auth por fallo en Firestore.");
+        } catch (rollbackError) {
+          print("Error crítico en Rollback: $rollbackError");
+        }
+      }
+
       throw Exception("ERROR_REGISTRO_FIREBASE: ${e.toString()}");
     }
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class PersonalViewModel extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
@@ -49,10 +49,25 @@ class PersonalViewModel extends ChangeNotifier {
   // 3. ACTUALIZAR TRABAJADOR (EDITAR)
   Future<bool> actualizarTrabajador(String idDoc, Map<String, dynamic> nuevosDatos) async {
     try {
-      // Actualizamos los datos en Firebase
+      // 1. Actualizamos los datos en Firebase (como lo hacíamos normalmente)
       await _firestore.collection('usuarios').doc(idDoc).update(nuevosDatos);
       
-      // Volvemos a descargar la lista para que la pantalla se actualice al instante
+      // 2. [CRITERIO 3] LOG DE AUDITORÍA: Guardamos el registro si se modificó el rol
+      if (nuevosDatos.containsKey('rol')) {
+        // Obtenemos el UID del administrador que está usando la app en este momento
+        final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'Usuario_Desconocido';
+        
+        // Creamos el registro en una nueva colección segura
+        await _firestore.collection('logs_auditoria').add({
+          'uid_administrador_operador': adminUid,
+          'id_usuario_modificado': idDoc,
+          'nuevo_rol_asignado': nuevosDatos['rol'],
+          'fecha_hora': FieldValue.serverTimestamp(), // Usa la hora inalterable del servidor de Google
+          'accion': 'MODIFICACION_PERMISOS'
+        });
+      }
+      
+      // 3. Volvemos a descargar la lista para actualizar la pantalla
       await cargarTrabajadores(); 
       return true;
     } catch (e) {
