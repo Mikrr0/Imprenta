@@ -158,6 +158,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+            
             const SizedBox(height: 32),
             Text("Modulos del Sistema", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: temaActual.textTheme.bodyLarge?.color)),
             const SizedBox(height: 16),

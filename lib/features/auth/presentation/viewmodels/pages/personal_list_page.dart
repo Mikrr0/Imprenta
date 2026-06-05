@@ -4,6 +4,7 @@ import "../personal_viewmodel.dart";
 import "../login_viewmodel.dart";    
 import "profile_form_page.dart";
 import "login_page.dart";
+import "package:proyecto/core/guards/role_guard.dart"; // Ajusta la ruta según tu proyecto si es necesario
 
 class PersonalListPage extends StatefulWidget {
   const PersonalListPage({super.key});
@@ -17,7 +18,6 @@ class _PersonalListPageState extends State<PersonalListPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Se llama a la nueva función reactiva
       context.read<PersonalViewModel>().iniciarEscuchaTrabajadores();
     });
   }
@@ -29,6 +29,7 @@ class _PersonalListPageState extends State<PersonalListPage> {
     final loginViewModel = context.watch<LoginViewModel>();
     final usuarioActual = loginViewModel.usuarioActual;
     
+    // 1. Si no hay sesión, expulsa al Login
     if (usuarioActual == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
@@ -36,124 +37,113 @@ class _PersonalListPageState extends State<PersonalListPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     
-    if (usuarioActual.rol == 'Operario') {
-      return Scaffold(
+    // 2. APLICACIÓN DEL ROUTE GUARD (TAREA 1)
+    // Envolvemos la pantalla completa. Si es Operario, no pasará de aquí.
+    return RoleGuard(
+      rolesPermitidos: const ['Administrador', 'Jefe'],
+      child: Scaffold(
         appBar: AppBar(
-          title: const Text("Mi Perfil", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          title: const Text("Personal", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: "Actualizar lista",
+              onPressed: () => viewModel.iniciarEscuchaTrabajadores(),
+            ),
+          ],
         ),
-        body: ProfileFormPage(
-          modoVisualizacion: true,
-          perfilAMostrar: usuarioActual,
-        ),
-      );
-    }
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Personal", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: "Actualizar lista",
-            onPressed: () => viewModel.iniciarEscuchaTrabajadores(),
-          ),
-        ],
-      ),
-      body: viewModel.estaCargando
-          ? const Center(child: CircularProgressIndicator())
-          : viewModel.listaTrabajadores.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.group_off_outlined, size: 80, color: temaActual.colorScheme.primary.withValues(alpha: 0.5)),
-                      const SizedBox(height: 16),
-                      Text(
-                        "No hay trabajadores registrados",
-                        style: TextStyle(fontSize: 18, color: temaActual.textTheme.bodyLarge?.color?.withValues(alpha: 0.7)),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 80),
-                  itemCount: viewModel.listaTrabajadores.length,
-                  itemBuilder: (context, index) {
-                    final trabajador = viewModel.listaTrabajadores[index];
-                    
-                    // --- NUEVA REGLA DE NEGOCIO Y SEGURIDAD ---
-                    // Ocultamos al usuario logeado para evitar que se auto-elimine.
-                    // Su edición debe hacerse exclusivamente desde la pantalla "Mi Perfil".
-                    if (trabajador.rut == usuarioActual.rut) {
-                      return const SizedBox.shrink(); // Retorna un widget invisible de 0 pixeles
-                    }
-                    
-                    return Card(
-                      color: temaActual.colorScheme.surface,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: temaActual.colorScheme.primary,
-                          child: Text(
-                            trabajador.nombreCompleto.isNotEmpty ? trabajador.nombreCompleto[0].toUpperCase() : '?',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        body: viewModel.estaCargando
+            ? const Center(child: CircularProgressIndicator())
+            : viewModel.listaTrabajadores.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.group_off_outlined, size: 80, color: temaActual.colorScheme.primary.withValues(alpha: 0.5)),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No hay trabajadores registrados",
+                          style: TextStyle(fontSize: 18, color: temaActual.textTheme.bodyLarge?.color?.withValues(alpha: 0.7)),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 80),
+                    itemCount: viewModel.listaTrabajadores.length,
+                    itemBuilder: (context, index) {
+                      final trabajador = viewModel.listaTrabajadores[index];
+                      
+                      // Regla de Negocio: Ocultar al usuario logeado
+                      if (trabajador.rut == usuarioActual.rut) {
+                        return const SizedBox.shrink(); 
+                      }
+                      
+                      return Card(
+                        color: temaActual.colorScheme.surface,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: temaActual.colorScheme.primary,
+                            child: Text(
+                              trabajador.nombreCompleto.isNotEmpty ? trabajador.nombreCompleto[0].toUpperCase() : '?',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          title: Text(
+                            trabajador.nombreCompleto,
+                            style: TextStyle(fontWeight: FontWeight.bold, color: temaActual.textTheme.bodyLarge?.color),
+                          ),
+                          subtitle: Text(
+                            "${trabajador.cargo} • RUT: ${trabajador.rut}",
+                            style: TextStyle(color: temaActual.textTheme.bodyMedium?.color),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.orange),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ProfileFormPage(
+                                        modoVisualizacion: false,
+                                        perfilAMostrar: trabajador, 
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  _mostrarDialogoConfirmacion(context, viewModel, trabajador.id ?? '');
+                                },
+                              ),
+                            ],
                           ),
                         ),
-                        title: Text(
-                          trabajador.nombreCompleto,
-                          style: TextStyle(fontWeight: FontWeight.bold, color: temaActual.textTheme.bodyLarge?.color),
-                        ),
-                        subtitle: Text(
-                          "${trabajador.cargo} • RUT: ${trabajador.rut}",
-                          style: TextStyle(color: temaActual.textTheme.bodyMedium?.color),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // --- BOTÓN EDITAR ---
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.orange),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ProfileFormPage(
-                                      modoVisualizacion: false,
-                                      perfilAMostrar: trabajador, 
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            // --- BOTÓN INHABILITAR ---
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                _mostrarDialogoConfirmacion(context, viewModel, trabajador.id ?? '');
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-      
-      // --- BOTÓN CREAR NUEVO USUARIO ---
-      floatingActionButton: (usuarioActual.rol == 'Administrador' || usuarioActual.rol == 'Jefe')
-          ? FloatingActionButton.extended(
-              backgroundColor: temaActual.colorScheme.primary,
-              foregroundColor: Colors.white,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfileFormPage()), 
-                );
-              },
-              icon: const Icon(Icons.person_add),
-              label: const Text("Nuevo Usuario", style: TextStyle(fontWeight: FontWeight.bold)),
-            )
-          : null,
+                      );
+                    },
+                  ),
+        
+        // Botón Crear Nuevo Usuario (Solo Administrador y Jefe)
+        floatingActionButton: (usuarioActual.rol == 'Administrador' || usuarioActual.rol == 'Jefe')
+            ? FloatingActionButton.extended(
+                backgroundColor: temaActual.colorScheme.primary,
+                foregroundColor: Colors.white,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfileFormPage()), 
+                  );
+                },
+                icon: const Icon(Icons.person_add),
+                label: const Text("Nuevo Usuario", style: TextStyle(fontWeight: FontWeight.bold)),
+              )
+            : null,
+      ),
     );
   }
 
