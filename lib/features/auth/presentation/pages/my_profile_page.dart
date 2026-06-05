@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
-import "../login_viewmodel.dart";
+import "../viewmodels/login_viewmodel.dart";
 
 class MyProfilePage extends StatelessWidget {
   const MyProfilePage({super.key});

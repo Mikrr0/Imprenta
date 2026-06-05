@@ -1,12 +1,14 @@
 import "dart:async";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
-import "../../../../../core/theme/theme_provider.dart";
-import "../../../../../core/constants/app_config.dart";
+import "../../../../core/theme/theme_provider.dart";
+import "../../../../core/constants/app_config.dart";
 import "login_page.dart";
 import "personal_list_page.dart";
-import "../login_viewmodel.dart";
+import "../viewmodels/login_viewmodel.dart";
 import "my_profile_page.dart";
+import '../../../../core/guards/role_guard.dart';
+import '../../../insumos/presentation/pages/insumos_list_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -172,20 +174,25 @@ class _HomePageState extends State<HomePage> {
                   if (AppConfig.puedeVerOrdenesDeProduccion(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(context, Icons.assignment, "Órdenes de\nTrabajo"),
 
+                  // 1. Botón Insumos (Protegido por AppConfig y RoleGuard)
                   if (AppConfig.puedeGestionarInventario(usuarioActual.rol, usuarioActual.cargo))
-                    _construirTarjetaModulo(context, Icons.inventory, "Insumos"),
+                    _construirTarjetaModulo(
+                      context, 
+                      Icons.inventory, 
+                      "Insumos",
+                      accionAlPresionar: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RoleGuard(rolesPermitidos: ['Administrador', 'Jefe'], child: InsumosListPage()))),
+                    ),
 
                   if (AppConfig.puedeVerProduccion(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(context, Icons.precision_manufacturing, "Producción"),
 
-                  if (usuarioActual.rol == 'Administrador' || AppConfig.puedeGestionarTrabajadores(usuarioActual.rol, usuarioActual.cargo))
+                  // 2. Botón Personal (Limpiado: el "|| rol == 'Administrador'" era redundante)
+                  if (AppConfig.puedeGestionarTrabajadores(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(
                       context, 
                       Icons.people, 
                       "Gestión de\nPersonal",
-                      accionAlPresionar: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const PersonalListPage()));
-                      },
+                      accionAlPresionar: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalListPage())),
                     ),
 
                   if (AppConfig.puedeVerReportes(usuarioActual.rol, usuarioActual.cargo))

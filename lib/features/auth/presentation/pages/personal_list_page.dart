@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
-import "../personal_viewmodel.dart"; 
-import "../login_viewmodel.dart";    
+import "../viewmodels/personal_viewmodel.dart"; 
+import "../viewmodels/login_viewmodel.dart";    
 import "profile_form_page.dart";
 import "login_page.dart";
 import "package:proyecto/core/guards/role_guard.dart"; // Ajusta la ruta según tu proyecto si es necesario

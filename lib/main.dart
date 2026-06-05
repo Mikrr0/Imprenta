@@ -4,7 +4,7 @@ import "package:provider/provider.dart";
 import "core/injection.dart";
 import "core/theme/app_theme.dart";
 import "core/theme/theme_provider.dart";
-import "features/auth/presentation/viewmodels/pages/login_page.dart";
+import "features/auth/presentation/pages/login_page.dart";
 import "features/auth/presentation/viewmodels/personal_viewmodel.dart";
 import 'package:firebase_core/firebase_core.dart';
 
@@ -37,6 +37,10 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => PersonalViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        // --- NUEVA LÍNEA PARA INSUMOS ---
+        ChangeNotifierProvider(
+          create: (_) => AppDependencies.buildInsumoViewModel(),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

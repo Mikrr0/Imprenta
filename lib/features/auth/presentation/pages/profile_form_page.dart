@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:rut_validator/rut_validator.dart';
 
-import '../../../../../core/constants/app_config.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/validators/campo_validators.dart';
-import '../../../../../core/models/perfil_trabajador.dart';
-import '../../../../../core/services/audit_service.dart';
-import '../../../../../core/services/logging_service.dart';
-import '../login_viewmodel.dart';
-import '../personal_viewmodel.dart'; // Agregamos el import de la lista
+import '../../../../core/constants/app_config.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/validators/campo_validators.dart';
+import '../../../../core/models/perfil_trabajador.dart';
+import '../../../../core/services/audit_service.dart';
+import '../../../../core/services/logging_service.dart';
+import '../viewmodels/login_viewmodel.dart';
+import '../viewmodels/personal_viewmodel.dart'; // Agregamos el import de la lista
 
 class ProfileFormPage extends StatefulWidget {
   /// [RF17] Modo de visualización: true = ver mi perfil (lectura), false = crear nuevo perfil (edición)

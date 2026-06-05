@@ -12,7 +12,7 @@ class LoginViewModel extends ChangeNotifier {
   bool estaRegistrando = false; 
   String? mensajeDeErrorVisible;
   
-  // Limpieza de Errores (Tu código)
+  // Limpieza de Errores
   void limpiarError() {
     if (mensajeDeErrorVisible != null) {
       mensajeDeErrorVisible = null;
@@ -23,7 +23,7 @@ class LoginViewModel extends ChangeNotifier {
   PerfilTrabajador? usuarioActual;
   final LoginUseCase loginUseCase;
   
-  // Servicio de seguridad (Código de Alejandro)
+  // Servicio de seguridad para manejo de bloqueos e intentos fallidos
   final SecurityService _securityService = SecurityService();
 
   StreamSubscription<PerfilTrabajador>? _usuarioSubscription;
@@ -87,7 +87,7 @@ class LoginViewModel extends ChangeNotifier {
 
     final rutLimpio = rutIngresado.trim();
 
-    // Verificación de Bloqueo de Seguridad en el Backend (Alejandro)
+    // Verificación de Bloqueo de Seguridad en el Backend
     final bloqueado = await _securityService.estaBloqueado(rutLimpio);
     if (bloqueado) {
       estaCargandoDatos = false;
@@ -131,7 +131,7 @@ class LoginViewModel extends ChangeNotifier {
         return false; 
       }
       
-      // Fallo: Registramos en la BD (Alejandro)
+      // Fallo: Registramos en la BD 
       int intentosActuales = await _securityService.registrarIntentoFallido(rutLimpio);
       
       if (intentosActuales >= 5) {
