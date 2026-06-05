@@ -5,11 +5,13 @@ import 'package:proyecto/features/auth/domain/usecases/login_usecase.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart';
 import 'package:proyecto/core/validators/campo_validators.dart';
 import 'package:proyecto/core/constants/app_config.dart'; 
+import 'package:proyecto/core/services/security_service.dart'; 
 
 class LoginViewModel extends ChangeNotifier {
   bool estaCargandoDatos = false;
   bool estaRegistrando = false; 
   String? mensajeDeErrorVisible;
+<<<<<<< HEAD
   int contadorIntentosFallidos = 0;
 
   // --- LIMPIEZA DE ERRORES VISUALES ---
@@ -21,7 +23,15 @@ class LoginViewModel extends ChangeNotifier {
   }
   
   PerfilTrabajador? usuarioActual;
+=======
+  
+  PerfilTrabajador? usuarioActual;
+  
+>>>>>>> alejandro
   final LoginUseCase loginUseCase;
+  
+  // Instanciamos el servicio de seguridad para comunicarse con Firestore
+  final SecurityService _securityService = SecurityService();
 
   // --- MOTOR REACTIVO DE SEGURIDAD (CERO PROCESOS ZOMBI) ---
   StreamSubscription<PerfilTrabajador>? _usuarioSubscription;
@@ -89,14 +99,27 @@ class LoginViewModel extends ChangeNotifier {
     mensajeDeErrorVisible = null;
     notifyListeners(); 
 
+<<<<<<< HEAD
     if (contadorIntentosFallidos >= 5) {
+=======
+    final rutLimpio = rutIngresado.trim();
+
+    // 1. Verificación de Bloqueo de Seguridad EN EL BACKEND (Firestore)
+    final bloqueado = await _securityService.estaBloqueado(rutLimpio);
+    if (bloqueado) {
+>>>>>>> alejandro
       estaCargandoDatos = false;
-      mensajeDeErrorVisible = "Cuenta bloqueada temporalmente por 15 minutos tras 5 intentos fallidos.";
+      mensajeDeErrorVisible = "Por seguridad, cuenta bloqueada por 15 minutos tras 5 intentos fallidos.";
       notifyListeners();
       return false;
     }
 
+<<<<<<< HEAD
     final errorRut = CampoValidators.validarRut(rutIngresado.trim());
+=======
+    // 2. Validaciones de formato iniciales de Benjamín
+    final errorRut = CampoValidators.validarRut(rutLimpio);
+>>>>>>> alejandro
     if (errorRut != null) {
       estaCargandoDatos = false;
       mensajeDeErrorVisible = errorRut; 
@@ -105,6 +128,7 @@ class LoginViewModel extends ChangeNotifier {
     }
 
     try {
+<<<<<<< HEAD
       final perfil = await loginUseCase.execute(rutIngresado.trim(), contrasenaIngresada);
       usuarioActual = perfil;
       contadorIntentosFallidos = 0; 
@@ -114,13 +138,30 @@ class LoginViewModel extends ChangeNotifier {
         _iniciarEscuchaSesionViva(currentUid);
       }
 
+=======
+      final perfil = await loginUseCase.execute(rutLimpio, contrasenaIngresada);
+      
+      // ÉXITO: Limpiamos el historial de fallos de la base de datos
+      await _securityService.resetearIntentos(rutLimpio);
+      
+      usuarioActual = perfil;
+>>>>>>> alejandro
       estaCargandoDatos = false;
       notifyListeners(); 
       return true; 
 
+<<<<<<< HEAD
     } catch (e) { 
+=======
+    } catch (e) {
+      // ERROR: Registramos el fallo en la base de datos
+>>>>>>> alejandro
       estaCargandoDatos = false;
+      
+      // Firebase nos devuelve cuántos intentos fallidos lleva
+      int intentosActuales = await _securityService.registrarIntentoFallido(rutLimpio);
 
+<<<<<<< HEAD
       // Reconocemos el candado si intenta iniciar sesión estando inhabilitado
       if (e.toString().contains('CUENTA_INHABILITADA')) {
         mensajeDeErrorVisible = "Esta cuenta ha sido inhabilitada. Contacta a administración.";
@@ -129,9 +170,12 @@ class LoginViewModel extends ChangeNotifier {
       }
       contadorIntentosFallidos++;
       if (contadorIntentosFallidos >= 5) {
+=======
+      if (intentosActuales >= 5) {
+>>>>>>> alejandro
         mensajeDeErrorVisible = "Cuenta bloqueada temporalmente por 15 minutos tras 5 intentos fallidos.";
       } else {
-        mensajeDeErrorVisible = "Credenciales incorrectas o usuario no registrado. Intento $contadorIntentosFallidos de 5.";
+        mensajeDeErrorVisible = "Credenciales incorrectas o usuario no registrado. Intento $intentosActuales de 5.";
       }
       
       notifyListeners();

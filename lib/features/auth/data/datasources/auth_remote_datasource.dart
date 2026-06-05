@@ -21,7 +21,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _userCreationBridgeAppName = 'UserCreationBridge';
 
-  /// Generador del correo falso para engañar a Firebase Auth
   String _rutAEmail(String rut) {
     String rutLimpio = rut.replaceAll('-', '').replaceAll('.', '');
     return "$rutLimpio@imprenta.cl";
@@ -30,7 +29,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<PerfilTrabajador> login(String rut, String password) async {
     try {
-      // Usamos DIRECTAMENTE el correo falso basado en el RUT
       final String emailFalsoAuth = _rutAEmail(rut);
       
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
@@ -44,17 +42,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (doc.exists) {
         final data = doc.data()!;
         
-        // --- NUEVO CANDADO DE SEGURIDAD ---
-        // Revisamos si el usuario fue inhabilitado (Soft Delete)
+        // Candado de Borrado Lógico
         if (data['estado'] == false) {
-          await _firebaseAuth.signOut(); // Lo expulsamos de Auth por si acaso
+          await _firebaseAuth.signOut();
           throw Exception("CUENTA_INHABILITADA");
         }
 
         return PerfilTrabajador(
           rut: rut,
           nombreCompleto: data['nombreCompleto'],
-          correoElectronico: data['correoElectronico'], // Aquí baja el correo real de la BD
+          correoElectronico: data['correoElectronico'], 
           cargo: data['cargo'],
           rol: data['rol'],
           sueldoBase: (data['sueldoBase'] as num).toDouble(),
@@ -74,8 +71,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       
       final data = doc.data()!;
       
-      // --- NUEVO CANDADO REACTIVO ---
-      // Si le cambian el estado a false mientras está usando la app, el Stream lanza el error
       if (data['estado'] == false) {
         throw Exception("CUENTA_INHABILITADA");
       }
@@ -98,8 +93,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required bool estado,
   }) async {
     FirebaseApp? appTemporal;
+    auth.UserCredential? credential; // Lógica de Rollback de Alejandro
+    
     try {
-      // 1. Definimos las dos identidades separadas
       final String emailFalsoParaAuth = _rutAEmail(perfil.rut);
       final String emailRealParaBD = perfil.correoElectronico.isNotEmpty
           ? perfil.correoElectronico
@@ -114,22 +110,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         app: appTemporal,
       );
 
-      // 2. Engañamos a Firebase Auth registrándolo con el RUT (Email falso)
-      final credential = await authTemporal.createUserWithEmailAndPassword(
+      // Creamos la cuenta en el puente temporal
+      credential = await authTemporal.createUserWithEmailAndPassword(
         email: emailFalsoParaAuth, 
         password: password,
       );
 
       final String uidGenerado = credential.user!.uid;
       
-      // 3. Guardamos en Firestore los datos limpios incluyendo el correo real
+      // Guardamos en Firestore los datos
       final Map<String, dynamic> datosUsuario = perfil.toMap();
       datosUsuario['id'] = uidGenerado;
-      datosUsuario['estado'] = estado; // Se guarda como true al crearlo
+      datosUsuario['estado'] = estado; 
       datosUsuario['correoElectronico'] = emailRealParaBD;
 
       await _firestore.collection('usuarios').doc(uidGenerado).set(datosUsuario);
+      
     } catch (e) {
+      // ROLLBACK DE ALEJANDRO: Si Firestore falla, eliminamos de Auth
+      if (credential != null && credential.user != null) {
+        try {
+          await credential.user!.delete();
+          print("Rollback exitoso: Usuario eliminado de Auth por fallo en Firestore.");
+        } catch (rollbackError) {
+          print("Error crítico en Rollback: $rollbackError");
+        }
+      }
       throw Exception("ERROR_REGISTRO_FIREBASE: ${e.toString()}");
     } finally {
       if (appTemporal != null) {
