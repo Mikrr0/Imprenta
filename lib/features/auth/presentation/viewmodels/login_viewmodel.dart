@@ -107,7 +107,6 @@ class LoginViewModel extends ChangeNotifier {
     try {
       final perfil = await loginUseCase.execute(rutLimpio, contrasenaIngresada);
       
-      // Éxito: Limpiamos historial en la BD
       await _securityService.resetearIntentos(rutLimpio);
       
       usuarioActual = perfil;
@@ -124,14 +123,12 @@ class LoginViewModel extends ChangeNotifier {
     } catch (e) { 
       estaCargandoDatos = false;
       
-      // Reconocemos candado de inhabilitación (Soft Delete)
       if (e.toString().contains('CUENTA_INHABILITADA')) {
         mensajeDeErrorVisible = "Esta cuenta ha sido inhabilitada. Contacta a administración.";
         notifyListeners();
         return false; 
       }
       
-      // Fallo: Registramos en la BD 
       int intentosActuales = await _securityService.registrarIntentoFallido(rutLimpio);
       
       if (intentosActuales >= 5) {
@@ -172,15 +169,14 @@ class LoginViewModel extends ChangeNotifier {
     _bloquearEscuchaPorRegistro = true;
 
     try {
-      final nuevoPerfil = PerfilTrabajador(
+final nuevoPerfil = PerfilTrabajador(
         nombreCompleto: nombre.trim(),
         rut: rut.trim(),
-        correoElectronico: correo.trim().isNotEmpty ? correo.trim() : "$rut@imprenta.cl",
+        correoElectronico: correo.trim(), 
         cargo: cargo,
         rol: rol,
         sueldoBase: double.parse(sueldoTexto.trim()),
       );
-
       await loginUseCase.registrarUsuario(
         perfil: nuevoPerfil,
         password: password,
@@ -198,7 +194,7 @@ class LoginViewModel extends ChangeNotifier {
       
       String errorCrudo = e.toString().toLowerCase();
       if (errorCrudo.contains('email-already-in-use') || errorCrudo.contains('already exists')) {
-        mensajeDeErrorVisible = "El RUT ya se encuentra registrado."; 
+        mensajeDeErrorVisible = "El correo o RUT ya se encuentra registrado."; 
       } else if (errorCrudo.contains('weak-password')) {
         mensajeDeErrorVisible = "La contraseña ingresada es demasiado débil.";
       } else if (errorCrudo.contains('network') || errorCrudo.contains('connection')) {

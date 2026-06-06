@@ -22,44 +22,46 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _userCreationBridgeAppName = 'UserCreationBridge';
 
-  String _rutAEmail(String rut) {
-    String rutLimpio = rut.replaceAll('-', '').replaceAll('.', '');
-    return "$rutLimpio@imprenta.cl";
-  }
-
-  @override
+@override
   Future<PerfilTrabajador> login(String rut, String password) async {
     try {
-      final String emailFalsoAuth = _rutAEmail(rut);
-      
-      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: emailFalsoAuth,
+      final String rutEscrito = rut.trim(); // Ej: 21.080.616-4
+      final String rutSinPuntos = rutEscrito.replaceAll('.', ''); // Ej: 21080616-4
+      final String rutLimpioTotal = rutSinPuntos.replaceAll('-', ''); // Ej: 210806164
+
+      final querySnapshot = await _firestore
+          .collection('usuarios')
+          .where('rut', whereIn: [rutEscrito, rutSinPuntos, rutLimpioTotal])
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        throw Exception("RUT no encontrado. Verifica los datos.");
+      }
+
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+
+      if (data['estado'] == false) {
+        throw Exception("CUENTA_INHABILITADA");
+      }
+
+      final String emailReal = data['correoElectronico'];
+
+
+      await _firebaseAuth.signInWithEmailAndPassword(
+        email: emailReal,
         password: password,
       );
 
-      final String uid = userCredential.user!.uid;
-      final doc = await _firestore.collection('usuarios').doc(uid).get();
-      
-      if (doc.exists) {
-        final data = doc.data()!;
-        
-        // Candado de Borrado Lógico
-        if (data['estado'] == false) {
-          await _firebaseAuth.signOut();
-          throw Exception("CUENTA_INHABILITADA");
-        }
-
-        return PerfilTrabajador(
-          rut: rut,
-          nombreCompleto: data['nombreCompleto'],
-          correoElectronico: data['correoElectronico'], 
-          cargo: data['cargo'],
-          rol: data['rol'],
-          sueldoBase: (data['sueldoBase'] as num).toDouble(),
-        );
-      } else {
-        throw Exception("Falta el documento en la base de datos");
-      }
+      return PerfilTrabajador(
+        rut: data['rut'],
+        nombreCompleto: data['nombreCompleto'],
+        correoElectronico: emailReal, 
+        cargo: data['cargo'],
+        rol: data['rol'],
+        sueldoBase: (data['sueldoBase'] as num).toDouble(),
+      );
     } catch (e) {
       throw Exception("FIREBASE_ERROR: ${e.toString()}");
     }
@@ -94,13 +96,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required bool estado,
   }) async {
     FirebaseApp? appTemporal;
-    auth.UserCredential? credential; // Lógica de Rollback de Alejandro
+    auth.UserCredential? credential;
     
     try {
-      final String emailFalsoParaAuth = _rutAEmail(perfil.rut);
-      final String emailRealParaBD = perfil.correoElectronico.isNotEmpty
-          ? perfil.correoElectronico
-          : emailFalsoParaAuth;
+
+      final String emailRealParaAuthYBD = perfil.correoElectronico.trim();
 
       appTemporal = await Firebase.initializeApp(
         name: _userCreationBridgeAppName,
@@ -111,24 +111,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         app: appTemporal,
       );
 
-      // Creamos la cuenta en el puente temporal
       credential = await authTemporal.createUserWithEmailAndPassword(
-        email: emailFalsoParaAuth, 
+        email: emailRealParaAuthYBD, 
         password: password,
       );
 
       final String uidGenerado = credential.user!.uid;
       
-      // Guardamos en Firestore los datos
       final Map<String, dynamic> datosUsuario = perfil.toMap();
       datosUsuario['id'] = uidGenerado;
       datosUsuario['estado'] = estado; 
-      datosUsuario['correoElectronico'] = emailRealParaBD;
+      datosUsuario['correoElectronico'] = emailRealParaAuthYBD;
 
       await _firestore.collection('usuarios').doc(uidGenerado).set(datosUsuario);
       
     } catch (e) {
-      // ROLLBACK DE ALEJANDRO: Si Firestore falla, eliminamos de Auth
+
       if (credential != null && credential.user != null) {
         try {
           await credential.user!.delete();

@@ -213,7 +213,6 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: controladorContrasena,
                     obscureText: true,
-                    // --- NUEVA LÍNEA: Limpiamos el error si corrige la contraseña ---
                     onChanged: (value) => context.read<LoginViewModel>().limpiarError(),
                     decoration: _buildInputDecoration(
                       hint: "••••••••",

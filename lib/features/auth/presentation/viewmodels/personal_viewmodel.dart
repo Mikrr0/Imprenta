@@ -59,10 +59,10 @@ class PersonalViewModel extends ChangeNotifier {
 
   Future<bool> actualizarTrabajador(String idDoc, Map<String, dynamic> nuevosDatos) async {
     try {
-      // 1. Actualizamos los datos en Firebase
+
       await _firestore.collection('usuarios').doc(idDoc).update(nuevosDatos);
       
-      // 2. Log de auditoría (Código de Alejandro)
+
       if (nuevosDatos.containsKey('rol')) {
         final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'Usuario_Desconocido';
         
@@ -75,8 +75,7 @@ class PersonalViewModel extends ChangeNotifier {
         });
       }
       
-      // NOTA ARQUITECTÓNICA: Se eliminó el "await cargarTrabajadores()" de Alejandro 
-      // porque tu motor Reactivo (_trabajadoresSubscription) detecta el cambio al instante.
+
       return true;
     } catch (e) {
       debugPrint("Error al actualizar: $e");
