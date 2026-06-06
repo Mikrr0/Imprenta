@@ -9,6 +9,8 @@ import "../viewmodels/login_viewmodel.dart";
 import "my_profile_page.dart";
 import '../../../../core/guards/role_guard.dart';
 import '../../../insumos/presentation/pages/insumos_list_page.dart';
+import 'package:proyecto/features/bodega/presentation/pages/proveedores_list_page.dart';
+import 'package:proyecto/features/bodega/presentation/pages/ingreso_bodega_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -183,10 +185,44 @@ class _HomePageState extends State<HomePage> {
                       accionAlPresionar: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RoleGuard(rolesPermitidos: ['Administrador', 'Jefe'], child: InsumosListPage()))),
                     ),
 
+                  // 2. Botón Proveedores (Protegido para Admin y Jefe)
+                  if (AppConfig.puedeGestionarInventario(usuarioActual.rol, usuarioActual.cargo))
+                    _construirTarjetaModulo(
+                      context, 
+                      Icons.local_shipping, 
+                      "Proveedores",
+                      accionAlPresionar: () => Navigator.push(
+                        context, 
+                        MaterialPageRoute(
+                          builder: (_) => const RoleGuard(
+                            rolesPermitidos: ['Administrador', 'Jefe'], 
+                            child: ProveedoresListPage()
+                          )
+                        )
+                      ),
+                    ),
+
+                  // 3. Botón Ingreso a Bodega (Protegido para Encargado de Bodega, Admin y Jefe)
+                  if (['Administrador', 'Jefe'].contains(usuarioActual.rol) || usuarioActual.cargo == 'Encargado de Bodega')
+                    _construirTarjetaModulo(
+                      context, 
+                      Icons.add_box, 
+                      "Ingreso a\nBodega",
+                      accionAlPresionar: () => Navigator.push(
+                        context, 
+                        MaterialPageRoute(
+                          builder: (_) => const RoleGuard(
+                            rolesPermitidos: ['Administrador', 'Jefe', 'Encargado de Bodega'], 
+                            child: IngresoBodegaPage()
+                          )
+                        )
+                      ),
+                    ),
+
                   if (AppConfig.puedeVerProduccion(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(context, Icons.precision_manufacturing, "Producción"),
 
-                  // 2. Botón Personal (Limpiado: el "|| rol == 'Administrador'" era redundante)
+                  // 5. Botón Personal (Limpiado: el "|| rol == 'Administrador'" era redundante)
                   if (AppConfig.puedeGestionarTrabajadores(usuarioActual.rol, usuarioActual.cargo))
                     _construirTarjetaModulo(
                       context, 

@@ -41,6 +41,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AppDependencies.buildInsumoViewModel(),
         ),
+        // --- NUEVA LÍNEA PARA BODEGA ---
+        ChangeNotifierProvider(
+          create: (_) => AppDependencies.buildBodegaViewModel(),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

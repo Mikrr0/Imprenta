@@ -79,7 +79,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -94,7 +94,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                     Container(
                       padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        color: colorPrincipal.withOpacity(0.12),
+                        color: colorPrincipal.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -129,7 +129,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: Colors.green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.green.shade300),
                         ),
@@ -174,15 +174,15 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: colorPrincipal.withOpacity(0.15), width: 1.2),
+                          borderSide: BorderSide(color: colorPrincipal.withValues(alpha: 0.15), width: 1.2),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: colorPrincipal.withOpacity(0.15), width: 1.2),
+                          borderSide: BorderSide(color: colorPrincipal.withValues(alpha: 0.15), width: 1.2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: colorPrincipal.withOpacity(0.8), width: 1.8),
+                          borderSide: BorderSide(color: colorPrincipal.withValues(alpha: 0.8), width: 1.8),
                         ),
                       ),
                       validator: (value) {
@@ -205,7 +205,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                           backgroundColor: colorPrincipal,
                           foregroundColor: Colors.white,
                           elevation: 4,
-                          shadowColor: colorPrincipal.withOpacity(0.25),
+                          shadowColor: colorPrincipal.withValues(alpha: 0.25),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),

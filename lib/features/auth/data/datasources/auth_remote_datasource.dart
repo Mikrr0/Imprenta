@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart'; 
+import 'package:flutter/foundation.dart';
 
 abstract class AuthRemoteDataSource {
   Future<PerfilTrabajador> login(String rut, String password);
@@ -131,9 +132,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (credential != null && credential.user != null) {
         try {
           await credential.user!.delete();
-          print("Rollback exitoso: Usuario eliminado de Auth por fallo en Firestore.");
+          debugPrint("Rollback exitoso: Usuario eliminado de Auth por fallo en Firestore.");
         } catch (rollbackError) {
-          print("Error crítico en Rollback: $rollbackError");
+          debugPrint("Error crítico en Rollback: $rollbackError");
         }
       }
       throw Exception("ERROR_REGISTRO_FIREBASE: ${e.toString()}");

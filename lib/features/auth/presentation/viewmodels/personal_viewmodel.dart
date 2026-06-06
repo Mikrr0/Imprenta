@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,7 +41,7 @@ class PersonalViewModel extends ChangeNotifier {
       estaCargando = false;
       notifyListeners();
     }, onError: (error) {
-      print("Error al cargar trabajadores: $error");
+      debugPrint("Error al cargar trabajadores: $error");
       estaCargando = false;
       notifyListeners();
     });
@@ -51,7 +52,7 @@ class PersonalViewModel extends ChangeNotifier {
       await _firestore.collection('usuarios').doc(idDoc).update({'estado': false});
       return true;
     } catch (e) {
-      print("Error al inhabilitar: $e");
+      debugPrint("Error al inhabilitar: $e");
       return false;
     }
   }
@@ -78,7 +79,7 @@ class PersonalViewModel extends ChangeNotifier {
       // porque tu motor Reactivo (_trabajadoresSubscription) detecta el cambio al instante.
       return true;
     } catch (e) {
-      print("Error al actualizar: $e");
+      debugPrint("Error al actualizar: $e");
       return false;
     }
   }

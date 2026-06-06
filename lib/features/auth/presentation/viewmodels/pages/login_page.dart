@@ -3,8 +3,8 @@ import "package:flutter/services.dart";
 import "package:provider/provider.dart";
 import "package:proyecto/core/validators/campo_validators.dart";
 import "package:proyecto/features/auth/presentation/viewmodels/login_viewmodel.dart";
-import "package:proyecto/features/auth/presentation/pages/home_page.dart";
-import "recuperar_clave_page.dart";
+import 'package:proyecto/features/auth/presentation/pages/home_page.dart';
+import 'package:proyecto/features/auth/presentation/pages/recuperar_clave_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

@@ -353,7 +353,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   ),
 
                 DropdownButtonFormField<String>(
-                  value: _rolSeleccionado,
+                  initialValue: _rolSeleccionado,
                   decoration: const InputDecoration(
                     labelText: 'Rol de Seguridad', 
                     prefixIcon: Icon(Icons.security), 
@@ -369,7 +369,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                 const SizedBox(height: 16),
 
                 DropdownButtonFormField<String>(
-                  value: _cargoSeleccionado,
+                  initialValue: _cargoSeleccionado,
                   decoration: InputDecoration(
                     labelText: 'Cargo', 
                     prefixIcon: const Icon(Icons.work),

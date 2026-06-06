@@ -1,9 +1,9 @@
-/// [RF1] [RNF5] Validador especializado de contraseñas
-/// Implementa la lógica de validación de contraseñas con expresiones regulares.
-/// Requisitos: Mínimo 8 caracteres, al menos 1 MAYÚSCULA, 1 minúscula, 1 número
-/// 
-/// NOTA: Esta clase encapsula la lógica compleja de RegExp.
-/// Desde campo_validators.dart se invoca este validador de forma centralizada.
+// [RF1] [RNF5] Validador especializado de contraseñas
+// Implementa la lógica de validación de contraseñas con expresiones regulares.
+// Requisitos: Mínimo 8 caracteres, al menos 1 MAYÚSCULA, 1 minúscula, 1 número
+// 
+// NOTA: Esta clase encapsula la lógica compleja de RegExp.
+// Desde campo_validators.dart se invoca este validador de forma centralizada.
 
 class PasswordValidator {
   // Constructor privado para evitar instanciación

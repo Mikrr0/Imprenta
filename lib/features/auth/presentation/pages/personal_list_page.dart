@@ -163,11 +163,17 @@ class _PersonalListPageState extends State<PersonalListPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              Navigator.pop(ctx);
+              Navigator.pop(ctx); // Cierra el modal
               final exito = await vm.eliminarTrabajador(id);
-              if (exito && mounted) {
+
+              if (!context.mounted) return;
+
+              if (exito) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Trabajador inhabilitado correctamente'), backgroundColor: Colors.green),
+                  const SnackBar(
+                    content: Text('Trabajador inhabilitado correctamente'), 
+                    backgroundColor: Colors.green
+                  ),
                 );
               }
             },

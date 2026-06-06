@@ -5,7 +5,7 @@ import 'package:proyecto/features/insumos/presentation/viewmodels/insumo_viewmod
 import 'package:proyecto/features/insumos/presentation/pages/insumos_form_page.dart';
 
 class InsumosListPage extends StatefulWidget {
-  const InsumosListPage({Key? key}) : super(key: key);
+  const InsumosListPage({super.key});
 
   @override
   State<InsumosListPage> createState() => _InsumosListPageState();
