@@ -59,10 +59,8 @@ class PersonalViewModel extends ChangeNotifier {
 
   Future<bool> actualizarTrabajador(String idDoc, Map<String, dynamic> nuevosDatos) async {
     try {
-
       await _firestore.collection('usuarios').doc(idDoc).update(nuevosDatos);
       
-
       if (nuevosDatos.containsKey('rol')) {
         final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'Usuario_Desconocido';
         
@@ -75,7 +73,6 @@ class PersonalViewModel extends ChangeNotifier {
         });
       }
       
-
       return true;
     } catch (e) {
       debugPrint("Error al actualizar: $e");
