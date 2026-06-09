@@ -45,6 +45,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AppDependencies.buildBodegaViewModel(),
         ),
+        // --- NUEVA LÍNEA PARA ÓRDENES DE TRABAJO ---
+        ChangeNotifierProvider(
+          create: (_) => AppDependencies.buildOrdenTrabajoViewModel(),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

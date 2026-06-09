@@ -11,6 +11,7 @@ import '../../../../core/guards/role_guard.dart';
 import '../../../insumos/presentation/pages/insumos_list_page.dart';
 import 'package:proyecto/features/bodega/presentation/pages/proveedores_list_page.dart';
 import 'package:proyecto/features/bodega/presentation/pages/ingreso_bodega_page.dart';
+import 'package:proyecto/features/orden_trabajo/presentation/pages/orden_trabajo_list_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -174,7 +175,15 @@ class _HomePageState extends State<HomePage> {
                 childAspectRatio: 1.0, 
                 children: [
                   if (AppConfig.puedeVerOrdenesDeProduccion(usuarioActual.rol, usuarioActual.cargo))
-                    _construirTarjetaModulo(context, Icons.assignment, "Órdenes de\nTrabajo"),
+                    _construirTarjetaModulo(
+                      context, 
+                      Icons.assignment, 
+                      "Órdenes de\nTrabajo",
+                      accionAlPresionar: () => Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (_) => const OrdenTrabajoListPage())
+                      ),
+                    ),
 
                   // 1. Botón Insumos (Protegido por AppConfig y RoleGuard)
                   if (AppConfig.puedeGestionarInventario(usuarioActual.rol, usuarioActual.cargo))
