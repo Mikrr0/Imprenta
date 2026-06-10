@@ -25,7 +25,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 @override
   Future<PerfilTrabajador> login(String rut, String password) async {
     try {
-      final String rutEscrito = rut.trim(); // Ej: 21.080.616-4
+      final String rutEscrito = rut.trim().toUpperCase(); // Ej: 21.080.616-4
       final String rutSinPuntos = rutEscrito.replaceAll('.', ''); // Ej: 21080616-4
       final String rutLimpioTotal = rutSinPuntos.replaceAll('-', ''); // Ej: 210806164
 
