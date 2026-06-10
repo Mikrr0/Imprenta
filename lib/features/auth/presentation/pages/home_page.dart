@@ -12,6 +12,8 @@ import '../../../insumos/presentation/pages/insumos_list_page.dart';
 import 'package:proyecto/features/bodega/presentation/pages/proveedores_list_page.dart';
 import 'package:proyecto/features/bodega/presentation/pages/ingreso_bodega_page.dart';
 import 'package:proyecto/features/orden_trabajo/presentation/pages/orden_trabajo_list_page.dart';
+// IMPORTACIÓN NUEVA
+import '../viewmodels/asistencia_viewmodel.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,73 +23,49 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool estadoAsistenciaActiva = false;
   bool simuladorConexionInternetActivo = true;
-  Timer? temporizadorMarcaje;
-  int segundosRestantesParaMarcar = 0;
 
-  bool get puedeMarcarAsistencia => segundosRestantesParaMarcar == 0;
+  // --- FUNCIÓN INTEGRADA ---
+  void marcarAsistencia() async {
+    final loginViewModel = context.read<LoginViewModel>();
+    final usuarioActual = loginViewModel.usuarioActual;
+    if (usuarioActual == null) return;
 
-  @override
-  void dispose() {
-    temporizadorMarcaje?.cancel();
-    super.dispose();
-  }
-
-  void marcarAsistencia() {
-    if (!puedeMarcarAsistencia) return;
-
-    setState(() {
-      estadoAsistenciaActiva = !estadoAsistenciaActiva;
-      segundosRestantesParaMarcar = 120;
-    });
-
-    temporizadorMarcaje?.cancel();
-    temporizadorMarcaje = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (segundosRestantesParaMarcar <= 1) {
-        timer.cancel();
-        if (mounted) setState(() => segundosRestantesParaMarcar = 0);
-      } else if (mounted) {
-        setState(() => segundosRestantesParaMarcar--);
-      }
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              simuladorConexionInternetActivo
-                  ? Icons.cloud_done
-                  : Icons.cloud_off,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                simuladorConexionInternetActivo
-                    ? "Marcaje sincronizado en el servidor"
-                    : "Error de conexion: marcaje pendiente",
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: simuladorConexionInternetActivo
-            ? Colors.green
-            : Theme.of(context).colorScheme.error,
-        duration: const Duration(seconds: 3),
-      ),
+    // Llamada al nuevo ViewModel persistente
+    final asistenciaViewModel = context.read<AsistenciaViewModel>();
+    final exito = await asistenciaViewModel.registrarAsistencia(
+      usuarioActual.id ?? '',
     );
+
+    if (exito) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Marcaje exitoso"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error de conexión"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final temaActual = Theme.of(context);
     final gestorDeTema = context.watch<ThemeProvider>();
-
     final loginViewModel = context.watch<LoginViewModel>();
     final usuarioActual = loginViewModel.usuarioActual;
+
+    // ESTADO GLOBAL (NUEVO)
+    final asistenciaViewModel = context.watch<AsistenciaViewModel>();
+    final puedeMarcar = asistenciaViewModel.puedeMarcarAsistencia;
+    final estadoActivo = asistenciaViewModel.estadoAsistenciaActiva;
+    final segundosRestantes = asistenciaViewModel.segundosRestantesParaMarcar;
 
     if (usuarioActual == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -179,25 +157,22 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 24),
+            // BOTÓN INTEGRADO CON EL ESTADO GLOBAL
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: puedeMarcarAsistencia ? marcarAsistencia : null,
+                onPressed: puedeMarcar ? marcarAsistencia : null,
                 icon: Icon(
-                  puedeMarcarAsistencia
-                      ? (estadoAsistenciaActiva
-                            ? Icons.exit_to_app
-                            : Icons.access_time)
+                  puedeMarcar
+                      ? (estadoActivo ? Icons.exit_to_app : Icons.access_time)
                       : Icons.timer,
                   color: Colors.white,
                 ),
                 label: Text(
-                  puedeMarcarAsistencia
-                      ? (estadoAsistenciaActiva
-                            ? "MARCAR SALIDA"
-                            : "MARCAR ENTRADA")
-                      : "ESPERE $segundosRestantesParaMarcar SEGUNDOS",
+                  puedeMarcar
+                      ? (estadoActivo ? "MARCAR SALIDA" : "MARCAR ENTRADA")
+                      : "ESPERE $segundosRestantes SEGUNDOS",
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.white,
@@ -206,7 +181,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 style: ElevatedButton.styleFrom(
                   disabledBackgroundColor: Colors.grey,
-                  backgroundColor: estadoAsistenciaActiva
+                  backgroundColor: estadoActivo
                       ? Colors.redAccent
                       : const Color(0xFF4CAF50),
                   shape: RoundedRectangleBorder(
@@ -215,7 +190,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 32),
             Text(
               "Modulos del Sistema",
@@ -233,18 +207,22 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.0,
                 children: [
-                  if (AppConfig.puedeVerOrdenesDeProduccion(usuarioActual.rol, usuarioActual.cargo))
+                  if (AppConfig.puedeVerOrdenesDeProduccion(
+                    usuarioActual.rol,
+                    usuarioActual.cargo,
+                  ))
                     _construirTarjetaModulo(
-                      context, 
-                      Icons.assignment, 
+                      context,
+                      Icons.assignment,
                       "Órdenes de\nTrabajo",
                       accionAlPresionar: () => Navigator.push(
-                        context, 
-                        MaterialPageRoute(builder: (_) => const OrdenTrabajoListPage())
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const OrdenTrabajoListPage(),
+                        ),
                       ),
                     ),
 
-                  // 1. Botón Insumos (Protegido por AppConfig y RoleGuard)
                   if (AppConfig.puedeGestionarInventario(
                     usuarioActual.rol,
                     usuarioActual.cargo,
@@ -264,7 +242,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                  // 2. Botón Proveedores (Protegido para Admin y Jefe)
                   if (AppConfig.puedeGestionarInventario(
                     usuarioActual.rol,
                     usuarioActual.cargo,
@@ -284,7 +261,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                  // 3. Botón Ingreso a Bodega (Protegido para Encargado de Bodega, Admin y Jefe)
                   if (['Administrador', 'Jefe'].contains(usuarioActual.rol) ||
                       usuarioActual.cargo == 'Encargado de Bodega')
                     _construirTarjetaModulo(
@@ -300,7 +276,7 @@ class _HomePageState extends State<HomePage> {
                               'Jefe',
                               'Encargado de Bodega',
                             ],
-                            child: IngresoBodegaPage(),
+                            child: const IngresoBodegaPage(),
                           ),
                         ),
                       ),
@@ -316,7 +292,6 @@ class _HomePageState extends State<HomePage> {
                       "Producción",
                     ),
 
-                  // 5. Botón Personal (Limpiado: el "|| rol == 'Administrador'" era redundante)
                   if (AppConfig.puedeGestionarTrabajadores(
                     usuarioActual.rol,
                     usuarioActual.cargo,
