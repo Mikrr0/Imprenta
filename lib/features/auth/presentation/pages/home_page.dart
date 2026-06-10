@@ -133,11 +133,8 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             tooltip: "Cerrar sesion",
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
+            onPressed: () async {
+              await context.read<LoginViewModel>().procesarCierreDeSesion();
             },
           ),
         ],
