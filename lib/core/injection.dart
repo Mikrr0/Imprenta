@@ -16,6 +16,10 @@ import 'package:proyecto/features/bodega/data/repositories/bodega_repository_imp
 import 'package:proyecto/features/bodega/domain/usecases/bodega_usecase.dart';
 import 'package:proyecto/features/bodega/presentation/viewmodels/bodega_viewmodel.dart';
 
+// --- NUEVOS IMPORTS PARA ÓRDENES DE TRABAJO ---
+import 'package:proyecto/core/services/orden_trabajo_service.dart';
+import 'package:proyecto/features/orden_trabajo/presentation/viewmodels/orden_trabajo_viewmodel.dart';
+
 class AppDependencies {
   static LoginViewModel buildLoginViewModel() {
     // 1. Creamos la conexión a la base de datos de Firebase
@@ -59,5 +63,11 @@ class AppDependencies {
     
     // 4. Inyectamos el caso de uso en el ViewModel de Bodega
     return BodegaViewModel(useCase: useCase);
+  }
+
+  // --- NUEVO MÉTODO PARA INYECTAR ÓRDENES DE TRABAJO ---
+  static OrdenTrabajoViewModel buildOrdenTrabajoViewModel() {
+    final service = OrdenTrabajoService();
+    return OrdenTrabajoViewModel(ordenTrabajoService: service);
   }
 }

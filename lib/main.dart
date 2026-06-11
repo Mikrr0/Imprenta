@@ -10,6 +10,7 @@ import "features/auth/presentation/viewmodels/personal_viewmodel.dart";
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import "features/auth/presentation/pages/home_page.dart";
+import 'package:proyecto/features/auth/presentation/viewmodels/asistencia_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => PersonalViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AsistenciaViewModel()),
         // --- NUEVA LÍNEA PARA INSUMOS ---
         ChangeNotifierProvider(
           create: (_) => AppDependencies.buildInsumoViewModel(),
@@ -50,6 +52,10 @@ class MyApp extends StatelessWidget {
         // --- NUEVA LÍNEA PARA BODEGA ---
         ChangeNotifierProvider(
           create: (_) => AppDependencies.buildBodegaViewModel(),
+        ),
+        // --- NUEVA LÍNEA PARA ÓRDENES DE TRABAJO ---
+        ChangeNotifierProvider(
+          create: (_) => AppDependencies.buildOrdenTrabajoViewModel(),
         ),
       ],
       child: Consumer<ThemeProvider>(
