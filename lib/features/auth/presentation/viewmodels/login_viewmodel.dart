@@ -123,7 +123,7 @@ class LoginViewModel extends ChangeNotifier {
     mensajeDeErrorVisible = null;
     notifyListeners();
 
-    final rutLimpio = rutIngresado.trim();
+    final rutLimpio = rutIngresado.trim().toUpperCase();
 
     // Verificación de Bloqueo de Seguridad en el Backend
     final bloqueado = await _securityService.estaBloqueado(rutLimpio);
@@ -221,7 +221,7 @@ class LoginViewModel extends ChangeNotifier {
     try {
       final nuevoPerfil = PerfilTrabajador(
         nombreCompleto: nombre.trim(),
-        rut: rut.trim(),
+        rut: rut.trim().toUpperCase(),
         correoElectronico: correo.trim(),
         cargo: cargo,
         rol: rol,
