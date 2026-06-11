@@ -13,21 +13,22 @@ class AsistenciaViewModel extends ChangeNotifier {
 
   bool get puedeMarcarAsistencia => segundosRestantesParaMarcar == 0;
 
-  Future<bool> registrarAsistencia(String uid) async {
+  // MODIFICACIÓN AQUÍ: Agregamos "String nombre" como segundo parámetro
+  Future<bool> registrarAsistencia(String uid, String nombre) async {
     if (!puedeMarcarAsistencia) return false;
 
     // Determina si es Entrada o Salida según el estado actual
     final tipoMarca = estadoAsistenciaActiva ? "Salida" : "Entrada";
 
     try {
-      final nuevaAsistencia = Asistencia(
-        uidTrabajador: uid,
-        tipo: tipoMarca,
-        fechaHora: DateTime.now(),
-      );
-
-      // Guarda en Firestore
-      await _firestore.collection('asistencia').add(nuevaAsistencia.toMap());
+      // MODIFICACIÓN AQUÍ: Guardamos directamente en Firestore creando un mapa
+      // para poder agregar el nombre sin alterar el modelo "asistencia.dart"
+      await _firestore.collection('asistencia').add({
+        'uid_trabajador': uid.isEmpty ? "RUT_O_ID_NO_ENCONTRADO" : uid,
+        'nombre_trabajador': nombre,
+        'tipo': tipoMarca,
+        'fecha_hora': DateTime.now(),
+      });
 
       // Si tiene éxito, cambiamos el estado e iniciamos el bloqueo de 2 minutos
       estadoAsistenciaActiva = !estadoAsistenciaActiva;

@@ -7,6 +7,7 @@ import "core/theme/theme_provider.dart";
 import "features/auth/presentation/pages/login_page.dart";
 import "features/auth/presentation/viewmodels/personal_viewmodel.dart";
 import 'package:firebase_core/firebase_core.dart';
+import 'package:proyecto/features/auth/presentation/viewmodels/asistencia_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => PersonalViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AsistenciaViewModel()),
         // --- NUEVA LÍNEA PARA INSUMOS ---
         ChangeNotifierProvider(
           create: (_) => AppDependencies.buildInsumoViewModel(),

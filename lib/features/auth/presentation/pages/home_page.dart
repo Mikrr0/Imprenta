@@ -34,7 +34,8 @@ class _HomePageState extends State<HomePage> {
     // Llamada al nuevo ViewModel persistente
     final asistenciaViewModel = context.read<AsistenciaViewModel>();
     final exito = await asistenciaViewModel.registrarAsistencia(
-      usuarioActual.id ?? '',
+      usuarioActual.rut,
+      usuarioActual.nombreCompleto,
     );
 
     if (exito) {

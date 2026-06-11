@@ -1,13 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/orden_trabajo.dart';
 
-
-
 class OrdenTrabajoService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Lista estricta de estados válidos según el RF5
-  final List<String> _estadosValidos = ['Pendiente', 'En Proceso', 'Detenida', 'Finalizada'];
+  final List<String> _estadosValidos = [
+    'Pendiente',
+    'En Proceso',
+    'Detenida',
+    'Finalizada',
+  ];
 
   /// 1. Crear Orden (Restringido a Jefes o Administradores)
   Future<void> crearOrden({
@@ -19,7 +22,9 @@ class OrdenTrabajoService {
   }) async {
     // Validación estricta de roles de seguridad
     if (userRole != 'Jefe' && userRole != 'Administrador') {
-      throw Exception('Permiso denegado: Solo Jefes o Administradores pueden crear órdenes.');
+      throw Exception(
+        'Permiso denegado: Solo Jefes o Administradores pueden crear órdenes.',
+      );
     }
 
     final nuevaOrden = {
@@ -43,7 +48,9 @@ class OrdenTrabajoService {
   }) async {
     // Validar que el estado pertenezca a la lista estricta del RF5
     if (!_estadosValidos.contains(nuevoEstado)) {
-      throw Exception('Estado inválido. Debe ser: Pendiente, En Proceso, Detenida o Finalizada.');
+      throw Exception(
+        'Estado inválido. Debe ser: Pendiente, En Proceso, Detenida o Finalizada.',
+      );
     }
 
     final docRef = _firestore.collection('ordenes_trabajo').doc(ordenId);
@@ -56,14 +63,14 @@ class OrdenTrabajoService {
         throw Exception('La orden de trabajo no existe.');
       }
 
-      final data = snapshot.data() as Map<String, dynamic>? ?? {};
+      final data = snapshot.data() ?? {};
       final int versionServidor = data['version'] ?? 1;
       final String estadoServidor = data['estado'] ?? 'Pendiente';
 
       // VERIFICACIÓN DEL BLOQUEO OPTIMISTA:
       if (versionLocal != versionServidor) {
         throw Exception(
-          'CONCURRENCIA: La orden fue modificada por otro usuario mientras operabas. Por favor, actualiza la vista.'
+          'CONCURRENCIA: La orden fue modificada por otro usuario mientras operabas. Por favor, actualiza la vista.',
         );
       }
 
@@ -71,10 +78,12 @@ class OrdenTrabajoService {
       bool transicionValida = false;
       switch (estadoServidor) {
         case 'Pendiente':
-          if (nuevoEstado == 'En Proceso' || nuevoEstado == 'Detenida') transicionValida = true;
+          if (nuevoEstado == 'En Proceso' || nuevoEstado == 'Detenida')
+            transicionValida = true;
           break;
         case 'En Proceso':
-          if (nuevoEstado == 'Detenida' || nuevoEstado == 'Finalizada') transicionValida = true;
+          if (nuevoEstado == 'Detenida' || nuevoEstado == 'Finalizada')
+            transicionValida = true;
           break;
         case 'Detenida':
           if (nuevoEstado == 'En Proceso') transicionValida = true;
@@ -86,7 +95,7 @@ class OrdenTrabajoService {
 
       if (!transicionValida) {
         throw Exception(
-          'SEGURIDAD: Transición no permitida. No se puede pasar de "$estadoServidor" a "$nuevoEstado".'
+          'SEGURIDAD: Transición no permitida. No se puede pasar de "$estadoServidor" a "$nuevoEstado".',
         );
       }
 
@@ -97,7 +106,8 @@ class OrdenTrabajoService {
       });
     });
   }
-    /// 3. Obtener todas las órdenes  
+
+  /// 3. Obtener todas las órdenes
   Future<List<OrdenTrabajo>> obtenerOrdenes() async {
     final snapshot = await _firestore.collection('ordenes_trabajo').get();
     return snapshot.docs.map((doc) => OrdenTrabajo.fromDocument(doc)).toList();
