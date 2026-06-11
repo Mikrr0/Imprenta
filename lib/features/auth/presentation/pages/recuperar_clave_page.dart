@@ -1,5 +1,7 @@
-import "package:flutter/material.dart";
-import "package:firebase_auth/firebase_auth.dart";
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:proyecto/core/constants/app_colors.dart';
+import 'package:proyecto/core/validators/campo_validators.dart';
 
 class RecuperarClavePage extends StatefulWidget {
   const RecuperarClavePage({super.key});
@@ -12,47 +14,76 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController controladorCorreo = TextEditingController();
   
-
-
   bool estaCargando = false;
-  String? mensajeExitoGenerico;
-
   @override
   void dispose() {
     controladorCorreo.dispose();
     super.dispose();
   }
 
-
   Future<void> procesarRecuperacion() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       estaCargando = true;
-      mensajeExitoGenerico = null;
     });
 
     try {
       final correo = controladorCorreo.text.trim();
       await FirebaseAuth.instance.sendPasswordResetEmail(email: correo);
-    } on FirebaseAuthException catch (e) {
-      debugPrint("Log interno (no visible al usuario): Código ${e.code}");
-    } catch (e) {
-      debugPrint("Error general: $e");
-    }
 
-    if (mounted) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Enlace de recuperación enviado con éxito."),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          estaCargando = false;
+          controladorCorreo.clear();
+        });
+        Navigator.pop(context);
+      }
+
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String mensajeError = 'Ocurrió un error inesperado.';
+      if (e.code == 'user-not-found') {
+        mensajeError = 'El correo electrónico no existe en el sistema.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(mensajeError),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      
       setState(() {
         estaCargando = false;
-        mensajeExitoGenerico = "Si el correo está registrado, hemos enviado un enlace de recuperación.";
-        controladorCorreo.clear();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error general: $e"),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      setState(() {
+        estaCargando = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     final Color colorPrincipal = Theme.of(context).colorScheme.primary;
     final Color colorFondo = Theme.of(context).scaffoldBackgroundColor;
 
@@ -91,18 +122,16 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: colorPrincipal.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.mark_email_read_rounded,
-                        size: 60,
-                        color: colorPrincipal,
+                    
+
+                    Center(
+                      child: Image.asset(
+                        'assets/images/logo_fuentes.jfif',
+                        height: 80,
+                        fit: BoxFit.contain,
                       ),
                     ),
+                    
                     const SizedBox(height: 24),
                     const Text(
                       "Recuperar Acceso",
@@ -123,36 +152,8 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                         height: 1.4,
                       ),
                     ),
+   
                     const SizedBox(height: 32),
-
-                    if (mensajeExitoGenerico != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.green.shade300),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.check_circle_outline, color: Colors.green),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                mensajeExitoGenerico!,
-                                style: const TextStyle(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
                     const Text(
                       "Correo Electrónico",
                       style: TextStyle(
@@ -185,15 +186,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                           borderSide: BorderSide(color: colorPrincipal.withValues(alpha: 0.8), width: 1.8),
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Por favor ingresa un correo";
-                        }
-                        if (!value.contains("@") || !value.contains(".")) {
-                          return "Ingresa un formato de correo válido";
-                        }
-                        return null;
-                      },
+                      validator: (value) => CampoValidators.validarCorreo(value),
                     ),
                     const SizedBox(height: 32),
 
