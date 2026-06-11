@@ -25,7 +25,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 @override
   Future<PerfilTrabajador> login(String rut, String password) async {
     try {
-      final String rutEscrito = rut.trim(); // Ej: 21.080.616-4
+      final String rutEscrito = rut.trim().toUpperCase(); // Ej: 21.080.616-4
       final String rutSinPuntos = rutEscrito.replaceAll('.', ''); // Ej: 21080616-4
       final String rutLimpioTotal = rutSinPuntos.replaceAll('-', ''); // Ej: 210806164
 
@@ -99,7 +99,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     auth.UserCredential? credential;
     
     try {
-
       final String emailRealParaAuthYBD = perfil.correoElectronico.trim();
 
       appTemporal = await Firebase.initializeApp(
@@ -111,6 +110,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         app: appTemporal,
       );
 
+      // 1. Creación en Auth
       credential = await authTemporal.createUserWithEmailAndPassword(
         email: emailRealParaAuthYBD, 
         password: password,
@@ -123,20 +123,53 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       datosUsuario['estado'] = estado; 
       datosUsuario['correoElectronico'] = emailRealParaAuthYBD;
 
-      await _firestore.collection('usuarios').doc(uidGenerado).set(datosUsuario);
-      
-    } catch (e) {
+      // 2. Bloque Seguro con Reintentos para Firestore (Resolución CN-003)
+      bool guardadoExitoso = false;
+      int intentos = 0;
+      const int maxIntentos = 3;
 
-      if (credential != null && credential.user != null) {
+      while (!guardadoExitoso && intentos < maxIntentos) {
         try {
-          await credential.user!.delete();
-          debugPrint("Rollback exitoso: Usuario eliminado de Auth por fallo en Firestore.");
-        } catch (rollbackError) {
-          debugPrint("Error crítico en Rollback: $rollbackError");
+          // Intentamos guardar con un timeout para evitar cuelgues infinitos
+          await _firestore
+              .collection('usuarios')
+              .doc(uidGenerado)
+              .set(datosUsuario)
+              .timeout(const Duration(seconds: 5));
+          guardadoExitoso = true;
+        } catch (e) {
+          intentos++;
+          if (intentos >= maxIntentos) {
+            throw Exception("Fallo al guardar en Firestore tras $maxIntentos intentos: $e");
+          }
+          // Espera progresiva antes de volver a intentar (1s, 2s)
+          await Future.delayed(Duration(seconds: intentos));
         }
       }
+      
+    } catch (e) {
+      // 3. Rollback Blindado (Si falla Firestore, borramos en Auth con reintentos)
+      if (credential != null && credential.user != null) {
+        bool rollbackExitoso = false;
+        int intentosRollback = 0;
+        
+        while (!rollbackExitoso && intentosRollback < 3) {
+          try {
+            await credential.user!.delete();
+            rollbackExitoso = true;
+            debugPrint("Rollback exitoso: Usuario eliminado de Auth por fallo en Firestore.");
+          } catch (rollbackError) {
+            intentosRollback++;
+            await Future.delayed(Duration(seconds: intentosRollback));
+            debugPrint("Error crítico en Rollback (Intento $intentosRollback): $rollbackError");
+          }
+        }
+      }
+      // Se lanza el error final para que el ViewModel libere la UI
       throw Exception("ERROR_REGISTRO_FIREBASE: ${e.toString()}");
+      
     } finally {
+      // Limpieza de la app temporal
       if (appTemporal != null) {
         try {
           final auth.FirebaseAuth authTemporal = auth.FirebaseAuth.instanceFor(app: appTemporal);

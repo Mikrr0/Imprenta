@@ -9,6 +9,7 @@ class PersonalViewModel extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   List<PerfilTrabajador> listaTrabajadores = [];
+  List<PerfilTrabajador> listaTrabajadoresInactivos = []; // <-- Nueva lista para los inhabilitados
   bool estaCargando = false;
   
   StreamSubscription<QuerySnapshot>? _trabajadoresSubscription;
@@ -19,15 +20,20 @@ class PersonalViewModel extends ChangeNotifier {
 
     _trabajadoresSubscription?.cancel();
 
+    // Escuchamos la colección completa para clasificar en tiempo real
     _trabajadoresSubscription = _firestore
         .collection('usuarios')
-        .where('estado', isEqualTo: true)
         .snapshots()
         .listen((snapshot) {
       
-      listaTrabajadores = snapshot.docs.map((doc) {
+      final List<PerfilTrabajador> activos = [];
+      final List<PerfilTrabajador> inactivos = [];
+
+      for (var doc in snapshot.docs) {
         final data = doc.data();
-        return PerfilTrabajador(
+        final bool esActivo = data['estado'] ?? true;
+
+        final trabajador = PerfilTrabajador(
           id: doc.id,
           rut: data['rut'] ?? '',
           nombreCompleto: data['nombreCompleto'] ?? data['nombre'] ?? 'Sin nombre',
@@ -36,7 +42,16 @@ class PersonalViewModel extends ChangeNotifier {
           rol: data['rol'] ?? 'Sin rol',
           sueldoBase: (data['sueldoBase'] ?? 0).toDouble(),
         );
-      }).toList();
+
+        if (esActivo) {
+          activos.add(trabajador);
+        } else {
+          inactivos.add(trabajador);
+        }
+      }
+
+      listaTrabajadores = activos;
+      listaTrabajadoresInactivos = inactivos; // <-- Se actualiza la lista de dados de baja
 
       estaCargando = false;
       notifyListeners();
@@ -47,12 +62,70 @@ class PersonalViewModel extends ChangeNotifier {
     });
   }
 
-  Future<bool> eliminarTrabajador(String idDoc) async {
+ Future<bool> eliminarTrabajador(String idDoc) async {
     try {
       await _firestore.collection('usuarios').doc(idDoc).update({'estado': false});
+      
+      final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'Usuario_Desconocido';
+      
+      // --- Esto es para saber quien hizo la acción y quien la recibio y no salga la id y sea mas claro ---
+      String nombreAdmin = "Admin Desconocido";
+      String nombreTrabajador = "Trabajador Desconocido";
+
+      if (adminUid != 'Usuario_Desconocido') {
+        final adminSnapshot = await _firestore.collection('usuarios').doc(adminUid).get();
+        nombreAdmin = adminSnapshot.data()?['nombreCompleto'] ?? adminSnapshot.data()?['nombre'] ?? 'Admin';
+      }
+      
+      final trabajadorSnapshot = await _firestore.collection('usuarios').doc(idDoc).get();
+      nombreTrabajador = trabajadorSnapshot.data()?['nombreCompleto'] ?? trabajadorSnapshot.data()?['nombre'] ?? 'Trabajador';
+      // ------------------------------------------------
+
+      await _firestore.collection('logs_auditoria').add({
+        'uid_administrador_operador': adminUid,
+        'nombre_administrador': nombreAdmin, 
+        'id_usuario_modificado': idDoc,
+        'nombre_usuario_modificado': nombreTrabajador,
+        'fecha_hora': FieldValue.serverTimestamp(),
+        'accion': 'INHABILITACION_USUARIO'
+      });
+
       return true;
     } catch (e) {
       debugPrint("Error al inhabilitar: $e");
+      return false;
+    }
+  }
+
+  Future<bool> habilitarTrabajador(String idDoc) async {
+    try {
+      await _firestore.collection('usuarios').doc(idDoc).update({'estado': true});
+      
+      final adminUid = FirebaseAuth.instance.currentUser?.uid ?? 'Usuario_Desconocido';
+      
+      // --- Esto es para saber quien hizo la acción y quien la recibio y no salga la id y sea mas claro ---
+      String nombreAdmin = "Admin Desconocido";
+      String nombreTrabajador = "Trabajador Desconocido";
+
+      if (adminUid != 'Usuario_Desconocido') {
+        final adminSnapshot = await _firestore.collection('usuarios').doc(adminUid).get();
+        nombreAdmin = adminSnapshot.data()?['nombreCompleto'] ?? adminSnapshot.data()?['nombre'] ?? 'Admin';
+      }
+      
+      final trabajadorSnapshot = await _firestore.collection('usuarios').doc(idDoc).get();
+      nombreTrabajador = trabajadorSnapshot.data()?['nombreCompleto'] ?? trabajadorSnapshot.data()?['nombre'] ?? 'Trabajador';
+      await _firestore.collection('logs_auditoria').add({
+        'uid_administrador_operador': adminUid,
+        'nombre_administrador': nombreAdmin,
+        'id_usuario_modificado': idDoc,
+        'nombre_usuario_modificado': nombreTrabajador, 
+        'fecha_hora': FieldValue.serverTimestamp(),
+        'accion': 'HABILITACION_USUARIO' 
+      });
+
+      return true;
+    } catch (e) {
+      debugPrint("Error al habilitar: $e");
       return false;
     }
   }
