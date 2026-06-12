@@ -5,8 +5,11 @@ import "core/injection.dart";
 import "core/theme/app_theme.dart";
 import "core/theme/theme_provider.dart";
 import "features/auth/presentation/pages/login_page.dart";
+import "features/auth/presentation/viewmodels/login_viewmodel.dart";
 import "features/auth/presentation/viewmodels/personal_viewmodel.dart";
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import "features/auth/presentation/pages/home_page.dart";
 import 'package:proyecto/features/auth/presentation/viewmodels/asistencia_viewmodel.dart';
 
 void main() async {
@@ -23,6 +26,9 @@ void main() async {
           )
         : null,
   );
+  if (kIsWeb) {
+    await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+  }
   runApp(const MyApp());
 }
 
@@ -60,7 +66,36 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.modoActual,
-            home: const LoginPage(),
+            home: StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (!snapshot.hasData) {
+                  return const LoginPage();
+                }
+
+                return FutureBuilder(
+                  future: context
+                      .read<LoginViewModel>()
+                      .restaurarSesionDesdeFirebase(),
+                  builder: (context, sessionSnapshot) {
+                    if (sessionSnapshot.connectionState !=
+                        ConnectionState.done) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    return const HomePage();
+                  },
+                );
+              },
+            ),
           );
         },
       ),

@@ -22,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    context.read<LoginViewModel>().limpiarError();
     controladorRut.dispose();
     controladorContrasena.dispose();
     super.dispose();
