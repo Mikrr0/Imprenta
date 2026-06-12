@@ -15,8 +15,9 @@ class OrdenTrabajoViewModel extends ChangeNotifier {
   String? mensajeDeExitoVisible;
   StreamSubscription? _ordenesSubscription;
 
-  // --- ESTADO DE CAMBIO DE ESTADO ---
+  // --- ESTADO DE CAMBIO DE ESTADO Y CREACIÓN ---
   bool estaCambiandoEstado = false;
+  bool estaCreando = false;
   OrdenTrabajo? ordenSeleccionada;
 
   // --- LISTA DE ESTADOS VÁLIDOS ---
@@ -117,6 +118,42 @@ class OrdenTrabajoViewModel extends ChangeNotifier {
       // Recarga la orden desde Firestore (el usuario verá la versión actualizada)
       ordenSeleccionada = await obtenerOrdenPorId(ordenId);
       notifyListeners();
+    }
+  }
+
+  /// Crea una nueva orden de trabajo
+  Future<bool> crearOrden({
+    required String descripcion,
+    required DateTime fechaEntrega,
+    required String prioridad,
+    required String operarioId,
+    required String userRole,
+  }) async {
+    estaCreando = true;
+    limpiarError();
+    notifyListeners();
+
+    try {
+      await ordenTrabajoService.crearOrden(
+        descripcion: descripcion,
+        fechaEntrega: fechaEntrega,
+        prioridad: prioridad,
+        operarioId: operarioId,
+        userRole: userRole,
+      );
+
+      mensajeDeExitoVisible = 'Orden de trabajo creada con éxito';
+      estaCreando = false;
+      notifyListeners();
+
+      await Future.delayed(const Duration(seconds: 2));
+      limpiarExito();
+      return true;
+    } catch (e) {
+      mensajeDeErrorVisible = e.toString().replaceAll('Exception: ', '');
+      estaCreando = false;
+      notifyListeners();
+      return false;
     }
   }
 

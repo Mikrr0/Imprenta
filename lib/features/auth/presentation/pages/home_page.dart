@@ -14,6 +14,8 @@ import 'package:proyecto/features/bodega/presentation/pages/ingreso_bodega_page.
 import 'package:proyecto/features/orden_trabajo/presentation/pages/orden_trabajo_list_page.dart';
 // IMPORTACIÓN NUEVA
 import '../viewmodels/asistencia_viewmodel.dart';
+import 'package:proyecto/features/notificaciones/presentation/viewmodels/notificacion_viewmodel.dart';
+import 'package:proyecto/features/notificaciones/presentation/pages/notificaciones_list_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,6 +26,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool simuladorConexionInternetActivo = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loginVM = context.read<LoginViewModel>();
+      final rol = loginVM.usuarioActual?.cargo ?? loginVM.usuarioActual?.rol ?? '';
+      context.read<NotificacionViewModel>().iniciarEscucha(rol);
+    });
+  }
 
   // --- FUNCIÓN INTEGRADA ---
   void marcarAsistencia() async {
@@ -78,7 +90,9 @@ class _HomePageState extends State<HomePage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       appBar: AppBar(
         title: const Text(
           "Imprenta Fuentes",
@@ -110,13 +124,48 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            tooltip: "Cerrar sesion",
-            onPressed: () async {
-              await context.read<LoginViewModel>().procesarCierreDeSesion();
-            },
-          ),
+          
+          // CAMPANA DE NOTIFICACIONES (Solo para Jefes o Admin)
+          if (usuarioActual.rol == 'Jefe' || usuarioActual.rol == 'Administrador' || usuarioActual.cargo == 'Jefe' || usuarioActual.cargo == 'Administrador')
+            Consumer<NotificacionViewModel>(
+              builder: (context, notificacionVM, child) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications, color: Colors.white),
+                      tooltip: "Notificaciones",
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const NotificacionesListPage()),
+                        );
+                      },
+                    ),
+                    if (notificacionVM.unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${notificacionVM.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
         ],
       ),
       body: Padding(
@@ -321,6 +370,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    ),
     );
   }
 

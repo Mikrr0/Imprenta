@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import "features/auth/presentation/pages/home_page.dart";
 import 'package:proyecto/features/auth/presentation/viewmodels/asistencia_viewmodel.dart';
+import 'package:proyecto/features/notificaciones/presentation/viewmodels/notificacion_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +58,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AppDependencies.buildOrdenTrabajoViewModel(),
         ),
+        // --- NUEVA LÍNEA PARA NOTIFICACIONES ---
+        ChangeNotifierProvider(create: (_) => NotificacionViewModel()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
