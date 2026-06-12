@@ -108,7 +108,10 @@ class _PersonalListPageState extends State<PersonalListPage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ProfileFormPage()), 
+                    MaterialPageRoute(builder: (context) => const RoleGuard(
+                      rolesPermitidos: ['Administrador', 'Jefe'],
+                      child: ProfileFormPage(),
+                    )), 
                   );
                 },
                 icon: const Icon(Icons.person_add),
@@ -188,9 +191,12 @@ class _PersonalListPageState extends State<PersonalListPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProfileFormPage(
-                            modoVisualizacion: false,
-                            perfilAMostrar: trabajador, 
+                          builder: (context) => RoleGuard(
+                            rolesPermitidos: const ['Administrador', 'Jefe'],
+                            child: ProfileFormPage(
+                              modoVisualizacion: false,
+                              perfilAMostrar: trabajador, 
+                            ),
                           ),
                         ),
                       );
