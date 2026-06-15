@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/models/asistencia.dart';
+import '../../../../core/services/notificacion_service.dart';
 
 class AsistenciaViewModel extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -29,6 +30,16 @@ class AsistenciaViewModel extends ChangeNotifier {
         'tipo': tipoMarca,
         'fecha_hora': DateTime.now(),
       });
+
+      // INTEGRACIÓN: Disparar alerta si es entrada y es más tarde de las 08:30 AM
+      // (Para efectos de prueba rápida, cualquier hora después de las 8am será atraso)
+      if (tipoMarca == "Entrada") {
+        final horaActual = DateTime.now();
+        if (horaActual.hour >= 8) {
+          final notificacionService = NotificacionService();
+          await notificacionService.crearAlertaAtraso(uid, nombre);
+        }
+      }
 
       // Si tiene éxito, cambiamos el estado e iniciamos el bloqueo de 2 minutos
       estadoAsistenciaActiva = !estadoAsistenciaActiva;

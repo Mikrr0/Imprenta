@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:proyecto/features/orden_trabajo/presentation/viewmodels/orden_trabajo_viewmodel.dart';
 import 'package:proyecto/features/orden_trabajo/presentation/pages/orden_detalle_page.dart';
 import 'package:intl/intl.dart';
+import 'package:proyecto/features/auth/presentation/viewmodels/login_viewmodel.dart';
+import 'package:proyecto/features/orden_trabajo/presentation/pages/orden_trabajo_create_page.dart';
 
 class OrdenTrabajoListPage extends StatefulWidget {
   const OrdenTrabajoListPage({super.key});
@@ -37,12 +39,30 @@ class _OrdenTrabajoListPageState extends State<OrdenTrabajoListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loginVM = context.watch<LoginViewModel>();
+    final puedeCrear = loginVM.usuarioActual?.cargo == 'Jefe' || 
+                       loginVM.usuarioActual?.cargo == 'Administrador' || 
+                       loginVM.usuarioActual?.rol == 'Administrador';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Órdenes de Trabajo', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF0056b3),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
+      floatingActionButton: puedeCrear 
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OrdenTrabajoCreatePage()),
+                );
+              },
+              backgroundColor: const Color(0xFF0056b3),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
       body: Consumer<OrdenTrabajoViewModel>(
         builder: (context, vm, child) {
           // 1. Estado de Carga
