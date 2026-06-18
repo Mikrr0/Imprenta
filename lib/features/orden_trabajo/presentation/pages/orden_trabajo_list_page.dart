@@ -18,7 +18,10 @@ class _OrdenTrabajoListPageState extends State<OrdenTrabajoListPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrdenTrabajoViewModel>().iniciarEscuchaOrdenes();
+      final loginVM = context.read<LoginViewModel>();
+      final uid = loginVM.usuarioActual?.id;
+      final rol = loginVM.usuarioActual?.rol;
+      context.read<OrdenTrabajoViewModel>().iniciarEscuchaOrdenes(usuarioUid: uid, usuarioRol: rol);
     });
   }
 
@@ -89,7 +92,10 @@ class _OrdenTrabajoListPageState extends State<OrdenTrabajoListPage> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => vm.iniciarEscuchaOrdenes(),
+                      onPressed: () => vm.iniciarEscuchaOrdenes(
+                        usuarioUid: loginVM.usuarioActual?.id,
+                        usuarioRol: loginVM.usuarioActual?.rol,
+                      ),
                       child: const Text('Reintentar'),
                     ),
                   ],

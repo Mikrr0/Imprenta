@@ -40,15 +40,19 @@ class OrdenTrabajoViewModel extends ChangeNotifier {
   }
 
   /// Inicia la escucha reactiva de órdenes desde Firestore
-  void iniciarEscuchaOrdenes() {
+  void iniciarEscuchaOrdenes({String? usuarioUid, String? usuarioRol}) {
     estaCargando = true;
     notifyListeners();
 
     try {
-      _ordenesSubscription = _firestore
-          .collection('ordenes_trabajo')
-          .snapshots()
-          .listen(
+      Query query = _firestore.collection('ordenes_trabajo');
+
+      // Si es operario, solo ve las órdenes asignadas a él
+      if (usuarioRol == 'Operario' && usuarioUid != null) {
+        query = query.where('operarioId', isEqualTo: usuarioUid);
+      }
+
+      _ordenesSubscription = query.snapshots().listen(
             (snapshot) {
               listaOrdenes = snapshot.docs
                   .map((doc) => OrdenTrabajo.fromDocument(doc))

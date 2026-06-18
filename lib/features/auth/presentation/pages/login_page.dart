@@ -20,9 +20,17 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _errorRutInvalido;
 
+  LoginViewModel? _loginViewModel;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loginViewModel = context.read<LoginViewModel>();
+  }
+
   @override
   void dispose() {
-    context.read<LoginViewModel>().limpiarError();
+    _loginViewModel?.limpiarError();
     controladorRut.dispose();
     controladorContrasena.dispose();
     super.dispose();

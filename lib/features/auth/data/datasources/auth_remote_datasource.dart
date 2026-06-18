@@ -55,6 +55,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       return PerfilTrabajador(
+        id: doc.id,
         rut: data['rut'],
         nombreCompleto: data['nombreCompleto'],
         correoElectronico: emailReal, 
@@ -79,6 +80,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       return PerfilTrabajador(
+        id: doc.id,
         rut: data['rut'] ?? '',
         nombreCompleto: data['nombreCompleto'],
         correoElectronico: data['correoElectronico'],

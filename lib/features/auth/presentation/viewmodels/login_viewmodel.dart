@@ -36,8 +36,10 @@ class LoginViewModel extends ChangeNotifier {
     final user = firebase_auth.FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    estaCargandoDatos = true;
-    notifyListeners();
+    Future.microtask(() {
+      estaCargandoDatos = true;
+      notifyListeners();
+    });
 
     try {
       final perfil = await loginUseCase.authRepository
@@ -51,8 +53,10 @@ class LoginViewModel extends ChangeNotifier {
       await loginUseCase.authRepository.logout();
     }
 
-    estaCargandoDatos = false;
-    notifyListeners();
+    Future.microtask(() {
+      estaCargandoDatos = false;
+      notifyListeners();
+    });
   }
 
   void _iniciarEscuchaSesionViva(String uid) async {
