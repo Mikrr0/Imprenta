@@ -122,13 +122,19 @@ class AppConfig {
   }
 
   /// [HU01] [RF4] Órdenes de Producción
-  /// Jefe de Taller supervisa + Administrador para auditoría
+  /// Jefe de Taller supervisa + Administrador para auditoría + Operarios ven sus tareas
   static bool puedeVerOrdenesDeProduccion(String rol, String cargo) {
     // Jefe de Taller: supervisor operativo
     if (rol == 'Jefe' && cargo == 'Jefe de Taller') return true;
     
     // Administrador: auditoría y supervisión general
     if (rol == 'Administrador') return true;
+
+    // Operarios: ven sus tareas asignadas
+    if (rol == 'Operario' && 
+        (cargo == 'Operario de Impresión' || cargo == 'Operario de Corte')) {
+      return true;
+    }
     
     return false;
   }
@@ -140,24 +146,6 @@ class AppConfig {
     if (rol == 'Jefe' && cargo == 'Encargado de Bodega') return true;
     
     // Administrador: supervisión y auditoría del catálogo
-    if (rol == 'Administrador') return true;
-    
-    return false;
-  }
-
-  /// [RF4] [RF5] [HU02] [HU06] Producción / Mis Tareas
-  /// Jefe supervisa todo + Operarios ven sus tareas + Administrador para monitoreo
-  static bool puedeVerProduccion(String rol, String cargo) {
-    // Jefe de Taller: panel de supervisión general
-    if (rol == 'Jefe' && cargo == 'Jefe de Taller') return true;
-    
-    // Operarios: ven sus tareas asignadas
-    if (rol == 'Operario' && 
-        (cargo == 'Operario de Impresión' || cargo == 'Operario de Corte')) {
-      return true;
-    }
-    
-    // Administrador: monitoreo de estados de producción
     if (rol == 'Administrador') return true;
     
     return false;

@@ -329,15 +329,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                  if (AppConfig.puedeVerProduccion(
-                    usuarioActual.rol,
-                    usuarioActual.cargo,
-                  ))
-                    _construirTarjetaModulo(
-                      context,
-                      Icons.precision_manufacturing,
-                      "Producción",
-                    ),
+
 
                   if (AppConfig.puedeGestionarTrabajadores(
                     usuarioActual.rol,

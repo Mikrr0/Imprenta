@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto/features/auth/domain/usecases/login_usecase.dart';
 import 'package:proyecto/core/models/perfil_trabajador.dart';
 import 'package:proyecto/core/validators/campo_validators.dart';
@@ -30,14 +31,17 @@ class LoginViewModel extends ChangeNotifier {
   bool _bloquearEscuchaPorRegistro = false;
 
   LoginViewModel({required this.loginUseCase});
+  
   Future<void> restaurarSesionDesdeFirebase() async {
     if (usuarioActual != null) return;
 
     final user = firebase_auth.FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    estaCargandoDatos = true;
-    notifyListeners();
+    Future.microtask(() {
+      estaCargandoDatos = true;
+      notifyListeners();
+    });
 
     try {
       final perfil = await loginUseCase.authRepository
@@ -51,8 +55,10 @@ class LoginViewModel extends ChangeNotifier {
       await loginUseCase.authRepository.logout();
     }
 
-    estaCargandoDatos = false;
-    notifyListeners();
+    Future.microtask(() {
+      estaCargandoDatos = false;
+      notifyListeners();
+    });
   }
 
   void _iniciarEscuchaSesionViva(String uid) async {
@@ -199,21 +205,37 @@ class LoginViewModel extends ChangeNotifier {
     mensajeDeErrorVisible = null;
     notifyListeners();
 
-    if (CampoValidators.validarNombre(nombre.trim()) != null)
+    if (CampoValidators.validarNombre(nombre.trim()) != null) {
       return _abortarRegistro(CampoValidators.validarNombre(nombre.trim())!);
-    if (CampoValidators.validarRut(rut.trim()) != null)
+    }
+    if (CampoValidators.validarRut(rut.trim()) != null) {
       return _abortarRegistro(CampoValidators.validarRut(rut.trim())!);
-    if (CampoValidators.validarCorreo(correo.trim()) != null)
+    }
+    if (CampoValidators.validarCorreo(correo.trim()) != null) {
       return _abortarRegistro(CampoValidators.validarCorreo(correo.trim())!);
-    if (CampoValidators.validarSueldo(sueldoTexto.trim()) != null)
-      return _abortarRegistro(
-        CampoValidators.validarSueldo(sueldoTexto.trim())!,
-      );
-    if (CampoValidators.validarContrasena(password) != null)
+    }
+    if (CampoValidators.validarSueldo(sueldoTexto.trim()) != null) {
+      return _abortarRegistro(CampoValidators.validarSueldo(sueldoTexto.trim())!);
+    }
+    if (CampoValidators.validarContrasena(password) != null) {
       return _abortarRegistro(CampoValidators.validarContrasena(password)!);
-
+    }
     if (!AppConfig.combinacionValida(cargo, rol)) {
       return _abortarRegistro('La combinación de cargo y rol no es válida');
+    }
+
+    try {
+      final rutLimpio = rut.trim().toUpperCase();
+      final rutQuery = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('rut', isEqualTo: rutLimpio)
+          .get();
+
+      if (rutQuery.docs.isNotEmpty) {
+        return _abortarRegistro('El RUT ya se encuentra en el sistema');
+      }
+    } catch (e) {
+      return _abortarRegistro('Error al verificar el RUT en la base de datos');
     }
 
     _bloquearEscuchaPorRegistro = true;
@@ -242,9 +264,10 @@ class LoginViewModel extends ChangeNotifier {
       estaRegistrando = false;
 
       String errorCrudo = e.toString().toLowerCase();
+
       if (errorCrudo.contains('email-already-in-use') ||
           errorCrudo.contains('already exists')) {
-        mensajeDeErrorVisible = "El correo o RUT ya se encuentra registrado.";
+        mensajeDeErrorVisible = "El correo ya se encuentra registrado.";
       } else if (errorCrudo.contains('weak-password')) {
         mensajeDeErrorVisible = "La contraseña ingresada es demasiado débil.";
       } else if (errorCrudo.contains('network') ||
