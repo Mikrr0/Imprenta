@@ -80,6 +80,8 @@ class _HomePageState extends State<HomePage> {
     final estadoActivo = asistenciaViewModel.estadoAsistenciaActiva;
     final segundosRestantes = asistenciaViewModel.segundosRestantesParaMarcar;
 
+    final estaProcesando = asistenciaViewModel.estaProcesando;
+
     if (usuarioActual == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
@@ -209,17 +211,25 @@ class _HomePageState extends State<HomePage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: puedeMarcar ? marcarAsistencia : null,
-                icon: Icon(
-                  puedeMarcar
-                      ? (estadoActivo ? Icons.exit_to_app : Icons.access_time)
-                      : Icons.timer,
-                  color: Colors.white,
-                ),
+                onPressed: (puedeMarcar && !estaProcesando) ? marcarAsistencia : null,
+                icon: estaProcesando
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Icon(
+                        puedeMarcar
+                            ? (estadoActivo ? Icons.exit_to_app : Icons.access_time)
+                            : Icons.timer,
+                        color: Colors.white,
+                      ),
                 label: Text(
-                  puedeMarcar
-                      ? (estadoActivo ? "MARCAR SALIDA" : "MARCAR ENTRADA")
-                      : "ESPERE $segundosRestantes SEGUNDOS",
+                  estaProcesando 
+                      ? "PROCESANDO..."
+                      : puedeMarcar
+                          ? (estadoActivo ? "MARCAR SALIDA" : "MARCAR ENTRADA")
+                          : "ESPERE $segundosRestantes SEGUNDOS",
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.white,
