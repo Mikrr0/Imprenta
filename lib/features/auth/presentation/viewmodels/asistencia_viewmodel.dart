@@ -13,18 +13,23 @@ class AsistenciaViewModel extends ChangeNotifier {
   Timer? _temporizadorMarcaje;
   bool _estaProcesando = false;
 
+  String? _uidActual;
+
   bool get puedeMarcarAsistencia => segundosRestantesParaMarcar == 0;
   bool get estaProcesando => _estaProcesando;
 
-  AsistenciaViewModel() {
-    _restaurarEstado();
-  }
+  AsistenciaViewModel();
 
-  Future<void> _restaurarEstado() async {
-    final prefs = await SharedPreferences.getInstance();
-    estadoAsistenciaActiva = prefs.getBool('estadoAsistenciaActiva') ?? false;
+  Future<void> cargarEstado(String uid) async {
+    if (_uidActual == uid) return;
     
-    final ultimoMarcaje = prefs.getInt('ultimoMarcajeMillis') ?? 0;
+    _uidActual = uid;
+    _temporizadorMarcaje?.cancel();
+    
+    final prefs = await SharedPreferences.getInstance();
+    estadoAsistenciaActiva = prefs.getBool('estadoAsistenciaActiva_$uid') ?? false;
+    
+    final ultimoMarcaje = prefs.getInt('ultimoMarcajeMillis_$uid') ?? 0;
     final ahora = DateTime.now().millisecondsSinceEpoch;
     final diferenciaEnSegundos = (ahora - ultimoMarcaje) ~/ 1000;
     
@@ -66,10 +71,10 @@ class AsistenciaViewModel extends ChangeNotifier {
       estadoAsistenciaActiva = !estadoAsistenciaActiva;
       segundosRestantesParaMarcar = 120;
       
-      // Guardar en persistencia para que sobreviva a reinicios de app
+      // Guardar en persistencia con llave única por usuario
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('estadoAsistenciaActiva', estadoAsistenciaActiva);
-      await prefs.setInt('ultimoMarcajeMillis', DateTime.now().millisecondsSinceEpoch);
+      await prefs.setBool('estadoAsistenciaActiva_$uid', estadoAsistenciaActiva);
+      await prefs.setInt('ultimoMarcajeMillis_$uid', DateTime.now().millisecondsSinceEpoch);
 
       notifyListeners();
 

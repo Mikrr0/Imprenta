@@ -34,6 +34,11 @@ class _HomePageState extends State<HomePage> {
       final loginVM = context.read<LoginViewModel>();
       final rol = loginVM.usuarioActual?.cargo ?? loginVM.usuarioActual?.rol ?? '';
       context.read<NotificacionViewModel>().iniciarEscucha(rol);
+      
+      final rut = loginVM.usuarioActual?.rut ?? '';
+      if (rut.isNotEmpty) {
+        context.read<AsistenciaViewModel>().cargarEstado(rut);
+      }
     });
   }
 
