@@ -33,6 +33,7 @@ class ProfileFormPage extends StatefulWidget {
 class _ProfileFormPageState extends State<ProfileFormPage> {
   final AuditService _auditService = AuditService();
   final LoggingService _loggingService = LoggingService();
+  bool _mostrarContrasenaCreacion = false;
   
   late final TextEditingController _nombreController;
   late final TextEditingController _rutController;
@@ -125,7 +126,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
           'correoElectronico': _correoController.text.trim(),
           'cargo': _cargoSeleccionado!,
           'rol': _rolSeleccionado!,
-          'sueldoBase': double.parse(_sueldoController.text),
+          'sueldoBase': double.parse(_sueldoController.text.replaceAll('.', '')),
         };
 
         final exito = await personalVM.actualizarTrabajador(idTrabajador, nuevosDatos);
@@ -349,15 +350,26 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                     children: [
                       TextFormField(
                         controller: _passwordController,
-                        decoration: const InputDecoration(
+                        obscureText: !_mostrarContrasenaCreacion,
+                        decoration: InputDecoration(
                           labelText: 'Contraseña inicial',
                           hintText: 'Mín 8 caracteres (mayúscula, minúscula, número)',
                           prefixIcon: Icon(Icons.lock),
                           helperText: 'Ej: Pass1234',
                           isDense: true,
                           errorMaxLines: 3,
+                        suffixIcon: IconButton(
+                            icon: Icon(
+                              _mostrarContrasenaCreacion ? Icons.visibility : Icons.visibility_off,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _mostrarContrasenaCreacion = !_mostrarContrasenaCreacion;
+                              });
+                            },
+                          ),
                         ),
-                        obscureText: true,
                         validator: CampoValidators.validarContrasena,
                       ),
                       const SizedBox(height: 16),

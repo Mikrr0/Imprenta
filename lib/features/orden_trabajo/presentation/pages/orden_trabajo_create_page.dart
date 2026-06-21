@@ -42,18 +42,6 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF0056b3), // color cabecera calendario
-              onPrimary: Colors.white, // texto cabecera calendario
-              onSurface: Colors.black, // texto dias
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (seleccion != null && seleccion != _fechaEntregaSeleccionada) {
@@ -107,6 +95,7 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
   Widget build(BuildContext context) {
     final personalVM = context.watch<PersonalViewModel>();
     final ordenVM = context.watch<OrdenTrabajoViewModel>();
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
 
     // Filtrar solo los trabajadores activos que sean "Operario" (por cargo o rol)
     final operarios = personalVM.listaTrabajadores.where((t) {
@@ -116,7 +105,7 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // Fondo claro
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, 
       appBar: AppBar(
         title: const Text('Crear Orden de Trabajo', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF0056b3),
@@ -133,6 +122,7 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
                   children: [
                     // --- DESCRIPCIÓN ---
                     _buildFormCard(
+                      esOscuro: esOscuro,
                       child: TextFormField(
                         controller: _descripcionController,
                         maxLines: 4,
@@ -154,13 +144,14 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
 
                     // --- FECHA DE ENTREGA ---
                     _buildFormCard(
+                      esOscuro: esOscuro,
                       child: InkWell(
                         onTap: () => _seleccionarFecha(context),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           child: Row(
                             children: [
-                              const Icon(Icons.calendar_today, color: Colors.black54),
+                              Icon(Icons.calendar_today, color: esOscuro ? Colors.grey.shade400 : Colors.black54),
                               const SizedBox(width: 12),
                               Text(
                                 _fechaEntregaSeleccionada == null
@@ -168,7 +159,9 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
                                     : 'Entrega: ${DateFormat('dd/MM/yyyy').format(_fechaEntregaSeleccionada!)}',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: _fechaEntregaSeleccionada == null ? Colors.black54 : Colors.black87,
+                                  color: _fechaEntregaSeleccionada == null 
+                                      ? (esOscuro ? Colors.grey.shade500 : Colors.black54)
+                                      : (esOscuro ? Colors.white : Colors.black87),
                                 ),
                               ),
                             ],
@@ -180,6 +173,7 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
 
                     // --- PRIORIDAD ---
                     _buildFormCard(
+                      esOscuro: esOscuro,
                       child: DropdownButtonFormField<String>(
                         value: _prioridadSeleccionada,
                         decoration: const InputDecoration(
@@ -205,6 +199,7 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
 
                     // --- OPERARIO ASIGNADO ---
                     _buildFormCard(
+                      esOscuro: esOscuro,
                       child: personalVM.estaCargando
                           ? const Padding(
                               padding: EdgeInsets.all(16.0),
@@ -283,12 +278,12 @@ class _OrdenTrabajoCreatePageState extends State<OrdenTrabajoCreatePage> {
   }
 
   // Helper para mantener el diseño de tarjeta con borde redondeado
-  Widget _buildFormCard({required Widget child}) {
+  Widget _buildFormCard({required Widget child, required bool esOscuro}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: esOscuro ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: esOscuro ? Colors.grey.shade800 : Colors.grey.shade300),
       ),
       child: child,
     );

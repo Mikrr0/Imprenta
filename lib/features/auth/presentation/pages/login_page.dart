@@ -1,3 +1,4 @@
+import 'dart:async';
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:provider/provider.dart";
@@ -22,6 +23,10 @@ class _LoginPageState extends State<LoginPage> {
 
   LoginViewModel? _loginViewModel;
 
+  // NUEVO: Variables para el ojito de la contraseña
+  bool _mostrarContrasena = false;
+  Timer? _ocultarTimer;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -33,6 +38,7 @@ class _LoginPageState extends State<LoginPage> {
     _loginViewModel?.limpiarError();
     controladorRut.dispose();
     controladorContrasena.dispose();
+    _ocultarTimer?.cancel(); // Cancelamos el timer si el usuario cambia de pantalla
     super.dispose();
   }
 
@@ -42,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
 
     final Color colorPrincipal = Theme.of(context).colorScheme.primary;
     final Color colorFondo = Theme.of(context).scaffoldBackgroundColor;
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: colorFondo,
@@ -54,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -75,19 +82,19 @@ class _LoginPageState extends State<LoginPage> {
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 40),
-                    const Text(
+                    Text(
                       "Bienvenido",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: esOscuro ? Colors.white : Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       "Ingresa tus credenciales para continuar",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, color: Colors.black54),
+                      style: TextStyle(fontSize: 15, color: esOscuro ? Colors.grey.shade400 : Colors.black54),
                     ),
                     const SizedBox(height: 32),
                     if (viewModel.mensajeDeErrorVisible != null) ...[
@@ -154,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 24),
                     ],
 
-                    _buildInputLabel("RUT"),
+                    _buildInputLabel("RUT", esOscuro),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: controladorRut,
@@ -167,6 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                         hint: "12.345.678-9",
                         icon: Icons.badge_outlined,
                         colorPrincipal: colorPrincipal,
+                        esOscuro: esOscuro,
                       ),
                       validator: CampoValidators.validarRut,
                       onChanged: (value) {
@@ -196,11 +204,11 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    _buildInputLabel("Contraseña"),
+                    _buildInputLabel("Contraseña", esOscuro),
                     const SizedBox(height: 8),
                     TextField(
                       controller: controladorContrasena,
-                      obscureText: true,
+                      obscureText: !_mostrarContrasena,
                       // --- NUEVA LÍNEA: Limpiamos el error si corrige la contraseña ---
                       onChanged: (value) =>
                           context.read<LoginViewModel>().limpiarError(),
@@ -208,6 +216,27 @@ class _LoginPageState extends State<LoginPage> {
                         hint: "••••••••",
                         icon: Icons.lock_outline,
                         colorPrincipal: colorPrincipal,
+                        esOscuro: esOscuro,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _mostrarContrasena ? Icons.visibility : Icons.visibility_off,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _mostrarContrasena = true;
+                            });
+                            _ocultarTimer?.cancel();
+                            _ocultarTimer = Timer(const Duration(seconds: 3), () {
+                              if (mounted) {
+                                setState(() {
+                                  _mostrarContrasena = false;
+                                });
+                              }
+                            });
+                          },
+                        )
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -307,15 +336,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildInputLabel(String labelText) {
+  Widget _buildInputLabel(String labelText, bool esOscuro) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
         labelText,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: esOscuro ? Colors.grey.shade300 : Colors.black87,
         ),
       ),
     );
@@ -325,6 +354,7 @@ class _LoginPageState extends State<LoginPage> {
     required String hint,
     required IconData icon,
     required Color colorPrincipal,
+    required bool esOscuro,
   }) {
     final borderStyle = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
@@ -339,7 +369,7 @@ class _LoginPageState extends State<LoginPage> {
       hintStyle: TextStyle(color: Colors.grey.shade500),
       prefixIcon: Icon(icon, color: colorPrincipal),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: esOscuro ? const Color(0xFF1E293B) : Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       border: borderStyle,
       enabledBorder: borderStyle,

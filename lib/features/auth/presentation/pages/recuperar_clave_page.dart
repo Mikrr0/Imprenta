@@ -86,6 +86,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
   Widget build(BuildContext context) {
     final Color colorPrincipal = Theme.of(context).colorScheme.primary;
     final Color colorFondo = Theme.of(context).scaffoldBackgroundColor;
+    final esOscuro = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: colorFondo,
@@ -93,7 +94,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: esOscuro ? Colors.white : Colors.black87), // Se quitó el const
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -106,7 +107,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
             child: Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -133,33 +134,33 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                     ),
                     
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       "Recuperar Acceso",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: esOscuro ? Colors.white : Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       "Ingresa tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: esOscuro ? Colors.grey.shade400 : Colors.black54,
                         height: 1.4,
                       ),
                     ),
    
                     const SizedBox(height: 32),
-                    const Text(
+                    Text(
                       "Correo Electrónico",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: esOscuro ? Colors.grey.shade300 : Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -171,7 +172,7 @@ class _RecuperarClavePageState extends State<RecuperarClavePage> {
                         hintStyle: TextStyle(color: Colors.grey.shade500),
                         prefixIcon: Icon(Icons.email_outlined, color: colorPrincipal),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: esOscuro ? const Color(0xFF1E293B) : Colors.white,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),

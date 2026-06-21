@@ -163,6 +163,8 @@ class MyProfilePage extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: temaActual.textTheme.bodyLarge?.color, // Cambia mágicamente a blanco en modo oscuro
             ),
+            softWrap: true, // Esto permite el salto de línea
+            overflow: TextOverflow.visible, // Asegura que el texto no se corte
           ),
         ),
       ),

@@ -46,9 +46,10 @@ class NotificacionesListPage extends StatelessWidget {
               itemCount: notificacionesPendientes.length,
               itemBuilder: (context, index) {
                 final noti = notificacionesPendientes[index];
+                final tema = Theme.of(context);
                 
                 return Card(
-                  color: Colors.blue.shade50,
+                  color: tema.brightness == Brightness.dark ? Colors.blue.withValues(alpha: 0.1) : Colors.blue.shade50,
                   margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   elevation: 3,
                   child: ListTile(

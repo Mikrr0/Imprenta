@@ -1,4 +1,7 @@
 // Archivo: lib/core/injection.dart
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:proyecto/core/theme/theme_provider.dart';
+
 import 'package:proyecto/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:proyecto/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:proyecto/features/auth/domain/usecases/login_usecase.dart';
@@ -21,51 +24,44 @@ import 'package:proyecto/core/services/orden_trabajo_service.dart';
 import 'package:proyecto/features/orden_trabajo/presentation/viewmodels/orden_trabajo_viewmodel.dart';
 
 class AppDependencies {
+  // Variable estática para guardar las preferencias en memoria
+  static late SharedPreferences _prefs;
+
+  // NUEVO: Inicializador asíncrono para dependencias pesadas
+  static Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  // NUEVO: Inyector para el ThemeProvider
+  static ThemeProvider buildThemeProvider() {
+    return ThemeProvider(_prefs);
+  }
+
+  //nota: el orden es importante, primero se crea la conexion con firebase mediante el datasource, 
+  //luego se inyecta ese datasource en el repositorio, luego el repositorio en el usecase
+  // y finalmente el usecase en el viewmodel
+
   static LoginViewModel buildLoginViewModel() {
-    // 1. Creamos la conexión a la base de datos de Firebase
     final dataSource = AuthRemoteDataSourceImpl();
-    
-    // 2. Le pasamos la conexión al repositorio
     final repository = AuthRepositoryImpl(remoteDataSource: dataSource);
-    
-    // 3. Le pasamos el repositorio al caso de uso
     final loginUseCase = LoginUseCase(repository);
-    
-    // 4. Finalmente, inyectamos el caso de uso en tu ViewModel
     return LoginViewModel(loginUseCase: loginUseCase);
   }
 
-  // --- MÉTODO PARA INYECTAR INSUMOS ---
   static InsumoViewModel buildInsumoViewModel() {
-    // 1. Creamos la conexión a la base de datos de Firebase para Insumos
     final dataSource = InsumosRemoteDataSourceImpl();
-    
-    // 2. Le pasamos la conexión al repositorio
     final repository = InsumosRepositoryImpl(remoteDataSource: dataSource);
-    
-    // 3. Le pasamos el repositorio al caso de uso (donde están las reglas de negocio)
     final useCase = InsumosUseCase(repository);
-    
-    // 4. Inyectamos el caso de uso en el ViewModel de Insumos
     return InsumoViewModel(useCase: useCase);
   }
 
-  // --- NUEVO MÉTODO PARA INYECTAR BODEGA ---
   static BodegaViewModel buildBodegaViewModel() {
-    // 1. Creamos la conexión a la base de datos de Firebase para Bodega
     final dataSource = BodegaRemoteDataSourceImpl();
-    
-    // 2. Le pasamos la conexión al repositorio
     final repository = BodegaRepositoryImpl(remoteDataSource: dataSource);
-    
-    // 3. Le pasamos el repositorio al caso de uso
     final useCase = BodegaUseCase(repository: repository);
-    
-    // 4. Inyectamos el caso de uso en el ViewModel de Bodega
     return BodegaViewModel(useCase: useCase);
   }
 
-  // --- NUEVO MÉTODO PARA INYECTAR ÓRDENES DE TRABAJO ---
   static OrdenTrabajoViewModel buildOrdenTrabajoViewModel() {
     final service = OrdenTrabajoService();
     return OrdenTrabajoViewModel(ordenTrabajoService: service);

@@ -58,6 +58,11 @@ class AppTheme {
           ),
         ),
       ),
+      datePickerTheme: const DatePickerThemeData(
+        backgroundColor: Colors.white,
+        headerBackgroundColor: Color(0xFF0056b3), // Cabecera azul
+        headerForegroundColor: Colors.white, // Texto de la cabecera
+      ),
     );
   }
 
@@ -117,6 +122,11 @@ class AppTheme {
             borderRadius: BorderRadius.circular(14),
           ),
         ),
+      ),
+      datePickerTheme: const DatePickerThemeData(
+        backgroundColor: Color(0xFF1E293B), // Fondo oscuro
+        headerBackgroundColor: Color(0xFF0056b3), // Cabecera azul (se mantiene)
+        headerForegroundColor: Colors.white, // Texto de la cabecera
       ),
     );
   }
