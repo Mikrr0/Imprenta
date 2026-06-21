@@ -1,7 +1,8 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "../viewmodels/login_viewmodel.dart";
-import "login_page.dart"; // <-- Asegúrate de que esta ruta sea correcta en tu proyecto
+import "login_page.dart";
+import '../../../../core/validators/campo_validators.dart';
 
 class MyProfilePage extends StatelessWidget {
   const MyProfilePage({super.key});
@@ -10,6 +11,7 @@ class MyProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final loginViewModel = context.watch<LoginViewModel>();
     final usuario = loginViewModel.usuarioActual;
+    final temaActual = Theme.of(context); // Extraemos el tema dinámico
 
     if (usuario == null) {
       return const Scaffold(
@@ -20,10 +22,11 @@ class MyProfilePage extends StatelessWidget {
     final Color colorPrincipal = const Color(0xFF4682B4);
 
     return Scaffold(
+      backgroundColor: temaActual.scaffoldBackgroundColor, // Respeta el fondo oscuro/claro
       appBar: AppBar(
         title: const Text(
           "Mi Perfil",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
         elevation: 0,
@@ -41,16 +44,21 @@ class MyProfilePage extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               usuario.nombreCompleto,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24, 
+                fontWeight: FontWeight.bold,
+                color: temaActual.textTheme.bodyLarge?.color, // Texto dinámico
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              usuario.rut,
+              CampoValidators.formatearRut(usuario.rut), 
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 32),
             _buildInfoTile(
+              context, // Pasamos el contexto para leer el modo oscuro
               icono: Icons.work_outline,
               titulo: "Cargo Oficial",
               valor: usuario.cargo,
@@ -58,6 +66,7 @@ class MyProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildInfoTile(
+              context,
               icono: Icons.admin_panel_settings_outlined,
               titulo: "Rol en el Sistema",
               valor: usuario.rol,
@@ -65,8 +74,8 @@ class MyProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // --- INICIO SOLUCIÓN TAREA 1: CORREO ---
             _buildInfoTile(
+              context,
               icono: Icons.email_outlined,
               titulo: "Correo Electrónico",
               valor: usuario.correoElectronico,
@@ -74,18 +83,13 @@ class MyProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 40),
 
-            // --- INICIO SOLUCIÓN TAREA 1: BOTÓN CERRAR SESIÓN ---
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  // 1. Ejecuta la función del ViewModel
                   await loginViewModel.procesarCierreDeSesion();
-
-                  // 2. Verifica que el widget siga activo antes de navegar
                   if (context.mounted) {
-                    // 3. Redirige al Login y limpia el historial de pantallas
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -112,21 +116,24 @@ class MyProfilePage extends StatelessWidget {
                 ),
               ),
             ),
-
-            // --- FIN SOLUCIÓN TAREA 1 ---
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoTile({
+  // Ahora recibe el BuildContext para adaptarse al tema
+  Widget _buildInfoTile(
+    BuildContext context, {
     required IconData icono,
     required String titulo,
     required String valor,
     required Color color,
   }) {
+    final temaActual = Theme.of(context);
+    
     return Card(
+      color: temaActual.cardColor, // Fondo de tarjeta dinámico
       elevation: 2,
       shadowColor: Colors.black.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -143,18 +150,18 @@ class MyProfilePage extends StatelessWidget {
           ),
           title: Text(
             titulo,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: Colors.grey,
+              color: temaActual.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600,
               fontWeight: FontWeight.w600,
             ),
           ),
           subtitle: Text(
             valor,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: temaActual.textTheme.bodyLarge?.color, // Cambia mágicamente a blanco en modo oscuro
             ),
           ),
         ),

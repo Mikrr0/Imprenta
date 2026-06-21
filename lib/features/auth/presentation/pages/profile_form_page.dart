@@ -11,6 +11,7 @@ import '../../../../core/services/audit_service.dart';
 import '../../../../core/services/logging_service.dart';
 import '../viewmodels/login_viewmodel.dart';
 import '../viewmodels/personal_viewmodel.dart'; // Agregamos el import de la lista
+import 'package:intl/intl.dart';
 
 class ProfileFormPage extends StatefulWidget {
   /// [RF17] Modo de visualización: true = ver mi perfil (lectura), false = crear nuevo perfil (edición)
@@ -318,6 +319,17 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9\-\.kK]'))],
                   decoration: const InputDecoration(labelText: 'RUT', hintText: 'Ej: 12.345.678-9', prefixIcon: Icon(Icons.badge)),
                   validator: CampoValidators.validarRut,
+                  onChanged: (value) {
+                    if (value.isNotEmpty) {
+                      final formatted = CampoValidators.formatearRut(value);
+                      if (formatted != value) {
+                        _rutController.value = TextEditingValue(
+                          text: formatted,
+                          selection: TextSelection.fromPosition(TextPosition(offset: formatted.length)),
+                        );
+                      }
+                    }
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -394,6 +406,18 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                   decoration: const InputDecoration(labelText: 'Sueldo base (CLP)', hintText: 'Ej: 500000', prefixIcon: Icon(Icons.attach_money), helperText: 'Mínimo legal: \$460.000'),
                   keyboardType: TextInputType.number,
                   validator: CampoValidators.validarSueldo,
+                  onChanged: (value) {
+                    if (value.isNotEmpty) {
+                      final numeroLimpio = int.tryParse(value.replaceAll('.', '')) ?? 0;
+                      final formateado = NumberFormat.currency(locale: 'es_CL', symbol: '', decimalDigits: 0).format(numeroLimpio).trim();
+                      if (formateado != value) {
+                        _sueldoController.value = TextEditingValue(
+                          text: formateado,
+                          selection: TextSelection.fromPosition(TextPosition(offset: formateado.length)),
+                        );
+                      }
+                    }
+                  },
                 ),
                 const SizedBox(height: 32),
 

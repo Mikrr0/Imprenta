@@ -94,9 +94,9 @@ class _IngresoBodegaPageState extends State<IngresoBodegaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Complete los datos del camión o entrega para sumar el stock al inventario general.',
-                style: TextStyle(fontSize: 14, color: Colors.black54),
+                style: TextStyle(fontSize: 14, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.black54),
               ),
               const SizedBox(height: 24),
 
@@ -111,8 +111,8 @@ class _IngresoBodegaPageState extends State<IngresoBodegaPage> {
                   final insumos = snapshot.data ?? [];
                   
                   if (insumos.isEmpty) {
-                    return const Card(
-                      color: Color(0xFFfff3cd),
+                    return Card(
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withValues(alpha: 0.15) : const Color(0xFFfff3cd),
                       child: Padding(
                         padding: EdgeInsets.all(12.0),
                         child: Text('No hay insumos registrados en el catálogo. Vaya al módulo de Insumos primero.'),
@@ -150,8 +150,8 @@ class _IngresoBodegaPageState extends State<IngresoBodegaPage> {
                   final proveedores = snapshot.data ?? [];
 
                   if (proveedores.isEmpty) {
-                    return const Card(
-                      color: Color(0xFFfff3cd),
+                    return Card(
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withValues(alpha: 0.15) : const Color(0xFFfff3cd),
                       child: Padding(
                         padding: EdgeInsets.all(12.0),
                         child: Text('No hay proveedores registrados. Debe registrar al menos uno antes de ingresar stock.'),

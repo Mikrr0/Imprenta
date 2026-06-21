@@ -153,6 +153,28 @@ class PersonalViewModel extends ChangeNotifier {
     }
   }
 
+  // NUEVO: Método para buscar un trabajador específico devolviendo el Modelo puro
+  Future<PerfilTrabajador?> obtenerTrabajadorPorId(String idDoc) async {
+    try {
+      final doc = await _firestore.collection('usuarios').doc(idDoc).get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        return PerfilTrabajador(
+          id: doc.id,
+          rut: data['rut'] ?? '',
+          nombreCompleto: data['nombreCompleto'] ?? data['nombre'] ?? 'Sin nombre',
+          correoElectronico: data['correoElectronico'] ?? '',
+          cargo: data['cargo'] ?? 'Sin cargo',
+          rol: data['rol'] ?? 'Sin rol',
+          sueldoBase: (data['sueldoBase'] ?? 0).toDouble(),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al buscar trabajador por ID: $e");
+    }
+    return null;
+  }
+
   @override
   void dispose() {
     _trabajadoresSubscription?.cancel();

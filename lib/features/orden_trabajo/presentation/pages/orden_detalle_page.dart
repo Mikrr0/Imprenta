@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:proyecto/core/models/orden_trabajo.dart';
 import 'package:proyecto/features/orden_trabajo/presentation/viewmodels/orden_trabajo_viewmodel.dart';
 import 'package:intl/intl.dart';
+import 'package:proyecto/core/validators/campo_validators.dart';
+import 'package:proyecto/features/auth/presentation/viewmodels/personal_viewmodel.dart';
+import 'package:proyecto/core/models/perfil_trabajador.dart';
 
 class OrdenDetallePageWidget extends StatefulWidget {
   final OrdenTrabajo orden;
@@ -168,7 +171,7 @@ class _OrdenDetallePageWidgetState extends State<OrdenDetallePageWidget> {
                             const SizedBox(height: 8),
                             Text(
                               'Versión: ${ordenActual.version}',
-                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.black54),
                             ),
                           ],
                         ),
@@ -201,7 +204,56 @@ class _OrdenDetallePageWidgetState extends State<OrdenDetallePageWidget> {
                 const SizedBox(height: 12),
                 _construirFilaInfo('Descripción', ordenActual.descripcion),
                 _construirFilaInfo('Prioridad', ordenActual.prioridad),
-                _construirFilaInfo('Operario ID', ordenActual.operarioId),
+                
+                // --- NUEVO: Consulta limpia respetando la Clean Architecture ---
+                FutureBuilder<PerfilTrabajador?>(
+                  future: context.read<PersonalViewModel>().obtenerTrabajadorPorId(ordenActual.operarioId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return _construirFilaInfo('Operario', 'Cargando datos...');
+                    }
+                    if (!snapshot.hasData || snapshot.data == null) {
+                      return _construirFilaInfo('Operario', 'Usuario no encontrado');
+                    }
+                    
+                    final perfil = snapshot.data!;
+                    final esOscuro = Theme.of(context).brightness == Brightness.dark;
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 120,
+                            child: Text(
+                              'Asignado a',
+                              style: TextStyle(fontWeight: FontWeight.w600, color: esOscuro ? Colors.grey.shade400 : Colors.black54),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  CampoValidators.formatearRut(perfil.rut), 
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: esOscuro ? Colors.white : Colors.black87)
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  perfil.nombreCompleto, 
+                                  style: TextStyle(fontSize: 13, color: esOscuro ? Colors.grey.shade400 : Colors.black54)
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                ),
+                // -----------------------------------------------------------------------------
+
                 _construirFilaInfo('Fecha Creación', fechaCreacion),
                 _construirFilaInfo('Fecha Entrega', fechaEntrega),
 
@@ -337,7 +389,7 @@ class _OrdenDetallePageWidgetState extends State<OrdenDetallePageWidget> {
             width: 120,
             child: Text(
               etiqueta,
-              style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black54),
+              style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.black54),
             ),
           ),
           Expanded(

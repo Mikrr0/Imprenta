@@ -199,7 +199,10 @@ class _OrdenTrabajoListPageState extends State<OrdenTrabajoListPage> {
                             ),
                             Text(
                               'Entrega: $fechaFormato',
-                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              style: TextStyle(
+                                fontSize: 12, 
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.black54
+                              ),
                             ),
                           ],
                         ),

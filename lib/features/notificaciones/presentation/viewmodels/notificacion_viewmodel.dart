@@ -68,6 +68,20 @@ class NotificacionViewModel extends ChangeNotifier {
     }
   }
 
+  // NUEVO: Limpia todo el ruido visual de un solo golpe
+  Future<void> marcarTodasComoLeidas() async {
+    try {
+      final batch = _firestore.batch();
+      for (var noti in _notificaciones.where((n) => !n.leida)) {
+        final docRef = _firestore.collection('notificaciones_internas').doc(noti.id);
+        batch.update(docRef, {'leida': true});
+      }
+      await batch.commit();
+    } catch (e) {
+      debugPrint("Error al limpiar notificaciones: $e");
+    }
+  }
+
   @override
   void dispose() {
     _notificacionesSub?.cancel();

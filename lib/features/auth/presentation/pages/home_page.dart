@@ -25,7 +25,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool simuladorConexionInternetActivo = true;
 
   @override
   void initState() {
@@ -113,23 +112,6 @@ class _HomePageState extends State<HomePage> {
             ),
             tooltip: "Alternar tema",
             onPressed: () => gestorDeTema.alternarTema(),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            children: [
-              Icon(
-                simuladorConexionInternetActivo ? Icons.wifi : Icons.wifi_off,
-                color: Colors.white,
-                size: 20,
-              ),
-              Switch(
-                value: simuladorConexionInternetActivo,
-                activeThumbColor: Colors.greenAccent,
-                onChanged: (nuevoEstado) => setState(
-                  () => simuladorConexionInternetActivo = nuevoEstado,
-                ),
-              ),
-            ],
           ),
           
           // CAMPANA DE NOTIFICACIONES (Solo para Jefes o Admin)
@@ -362,15 +344,15 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                  if (AppConfig.puedeVerReportes(
-                    usuarioActual.rol,
-                    usuarioActual.cargo,
-                  ))
-                    _construirTarjetaModulo(
-                      context,
-                      Icons.bar_chart,
-                      "Reportes",
-                    ),
+                  //if (AppConfig.puedeVerReportes(
+                  //  usuarioActual.rol,
+                  //  usuarioActual.cargo,
+                  //))
+                  //  _construirTarjetaModulo(
+                  //    context,
+                  //    Icons.bar_chart,
+                  //    "Reportes",
+                  //  ),
                 ],
               ),
             ),

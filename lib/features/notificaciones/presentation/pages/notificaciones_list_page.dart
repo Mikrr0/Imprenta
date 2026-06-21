@@ -9,31 +9,48 @@ class NotificacionesListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final notificacionVM = context.watch<NotificacionViewModel>();
-    final notificaciones = notificacionVM.notificaciones;
+    
+    // FILTRO: Solo mostramos las que NO han sido leídas para quitar el ruido visual
+    final notificacionesPendientes = notificacionVM.notificaciones.where((n) => !n.leida).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notificaciones de Hoy', style: TextStyle(color: Colors.white)),
+        title: const Text('Notificaciones', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF0056b3),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          // NUEVO: Botón para limpiar toda la bandeja de una vez
+          if (notificacionesPendientes.isNotEmpty)
+            TextButton.icon(
+              onPressed: () => notificacionVM.marcarTodasComoLeidas(),
+              icon: const Icon(Icons.clear_all, color: Colors.white),
+              label: const Text('Limpiar', style: TextStyle(color: Colors.white)),
+            ),
+        ],
       ),
-      body: notificaciones.isEmpty
+      body: notificacionesPendientes.isEmpty
           ? const Center(
-              child: Text(
-                'No hay notificaciones pendientes',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.notifications_active_outlined, size: 60, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No hay alertas pendientes',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
               ),
             )
           : ListView.builder(
-              itemCount: notificaciones.length,
+              itemCount: notificacionesPendientes.length,
               itemBuilder: (context, index) {
-                final noti = notificaciones[index];
-                final isLeida = noti.leida;
+                final noti = notificacionesPendientes[index];
                 
                 return Card(
-                  color: isLeida ? Colors.white : Colors.blue.shade50,
+                  color: Colors.blue.shade50,
                   margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  elevation: isLeida ? 1 : 3,
+                  elevation: 3,
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: noti.tipoIncidencia == 'Atraso' ? Colors.orange : Colors.red,
@@ -44,20 +61,16 @@ class NotificacionesListPage extends StatelessWidget {
                     ),
                     title: Text(
                       '${noti.tipoIncidencia} - ${noti.nombreTrabajador}',
-                      style: TextStyle(
-                        fontWeight: isLeida ? FontWeight.normal : FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       DateFormat('dd/MM/yyyy HH:mm').format(noti.fechaHora),
                     ),
-                    trailing: isLeida 
-                      ? const Icon(Icons.check, color: Colors.green)
-                      : const Icon(Icons.circle, color: Colors.blue, size: 12),
+                    // Indicador visual de que al tocarla se quitará
+                    trailing: const Icon(Icons.check_circle_outline, color: Colors.blue),
                     onTap: () {
-                      if (!isLeida) {
-                        context.read<NotificacionViewModel>().marcarComoLeida(noti.id);
-                      }
+                      // Al marcarla como leída, la base de datos se actualiza y la notificación desaparece de la vista automáticamente
+                      context.read<NotificacionViewModel>().marcarComoLeida(noti.id);
                     },
                   ),
                 );
