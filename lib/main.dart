@@ -47,7 +47,9 @@ class MyApp extends StatelessWidget {
           create: (_) => AppDependencies.buildLoginViewModel(),
         ),
         ChangeNotifierProvider(create: (_) => PersonalViewModel()),
-        ChangeNotifierProvider(create: (_) => AppDependencies.buildThemeProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AppDependencies.buildThemeProvider(),
+        ),
         ChangeNotifierProvider(create: (_) => AsistenciaViewModel()),
         // --- NUEVA LÍNEA PARA INSUMOS ---
         ChangeNotifierProvider(
